@@ -1,21 +1,5 @@
-# TriCoCo
-TriCoCo, a triplet network-based coincidental correctness detection approach.
-The aim of TriCoCo is higher detection precision.
-## Overview of TriCoCo
-![](figures/overview.png)
-### Step 1: True passing tests identification
-To build a more accurate model, we need to prepare the input data more cautiously.
-We are inspired by the existing CC detection approaches.
-They can generally obtain high recall values but low precision values.
-Thus, we can obtain true passing tests by the set difference operation.
-### Step 2: CCT detection
-The input data are the identified true passing tests and the failing tests.
-Triplet network are adopted for the distance metric learning between the two classes of data.
-After training process, the network can infer the probability of each test in the undetermined tests.
-
 ## Quick Start
 ### Requirements
-- OS: Linux
 - Python Package:
    - chardet==4.0.0
    - numpy==1.20.3
@@ -65,7 +49,7 @@ Eample output:
 
 ## Project Structure
 ```
-TriCoCo
+merit
 ├── CONFIG.py
 ├── requirements.txt
 ├── cc

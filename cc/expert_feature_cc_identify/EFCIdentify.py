@@ -1,8 +1,7 @@
+import copy
 import math
 import random
 import sys
-import time
-
 import numpy as np
 import pandas as pd
 import torch
@@ -10,15 +9,14 @@ import torch
 import torch.optim as optim
 
 from CONFIG import *
-from cc.MLP_DFL_cc_model.MLPDFLNet import Net2
-from cc.MLP_DFL_cc_model.ReadTrainData import ReadTrainData
 from cc.cc_baselines.BaseCCPipeline import BaseCCPipeline
+from cc.MLP_DFL_cc_model.ReadTrainData import ReadTrainData
 from cc.expert_feature_cc_identify.FailingTestsHandler import FailingTestsHandler
 from cc.expert_feature_cc_identify.FeatureTestsHandler import FeatureTestsHandler
 from cc.expert_feature_cc_identify.PassingTestsHandler import PassingTestsHandler
-from cc.expert_feature_cc_model.EFCDataLoader import CombinedInfoLoaderWithoutCovInfo, CombinedInfoLoader
-from cc.expert_feature_cc_model.ExpertFeatureCombinedNetwork import Net1, Net3, Net4, EFCNetwork, CoverageInfoSematicNet
-from utils.write_util import write_rank_to_txt
+from cc.expert_feature_cc_model.EFCDataLoader import CombinedInfoLoader, CombinedInfoLoaderWithoutCovInfo
+from cc.expert_feature_cc_model.ExpertFeatureCombinedNetwork import EFCNetwork, Net1, Net2, Net3, Net4, \
+    CoverageInfoSematicNet, ExpertFeatureCombinedNetwork
 import argparse
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -28,6 +26,8 @@ parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
 parser.add_argument('--batch-size', type=int, default=32, metavar='N',
                     help='input batch size for training (default: 16)')
 parser.add_argument('--epochs', type=int, default=30, metavar='N',
+                    help='number of epochs to train (default: 30)')
+parser.add_argument('--combined_epochs', type=int, default=30, metavar='N',
                     help='number of epochs to train (default: 30)')
 parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
                     help='learning rate (default: 0.001)')
@@ -44,27 +44,13 @@ parser.add_argument('--margin', type=float, default=0, metavar='M',
                     help='margin for triplet loss (default: 0.2)')
 parser.add_argument('--resume', default='', type=str,
                     help='path to latest checkpoint (default: none)')
-parser.add_argument('--name', default='MLPDFLCCNet', type=str,
-                    help='name of experiment')
 
 args = parser.parse_args()
 
 
-# def setup_seed(seed):
-#     torch.manual_seed(seed)
-#     torch.cuda.manual_seed_all(seed)
-#     np.random.seed(seed)
-#     random.seed(seed)
-#     torch.backends.cudnn.deterministic = True
-#
-# # 设置随机数种子
-# setup_seed(20)
-
-class EFCIdentify2(BaseCCPipeline):
+class EFCIdentify(BaseCCPipeline):
     def __init__(self, project_dir, configs, cita, way, K):
         super().__init__(project_dir, configs, way)
-        self.traindata = []
-        self.testdata = []
         self.cita = cita
         self.K = K
         self.train_test_config_list = []
@@ -73,7 +59,6 @@ class EFCIdentify2(BaseCCPipeline):
         self.test_part_list = []
         self.ccpl4vote = {}
         self.target4vote = {}
-        self.cc_target = None
 
     def _find_cc_index(self):
         program = self.configs['-p']
@@ -86,14 +71,14 @@ class EFCIdentify2(BaseCCPipeline):
 
         for i in range(self.K):
             self.train_test_config_list.append([])
-
         for i in range(program_len):
             config = {'-d': 'd4j', '-p': program, '-i': str(info_list[i]), '-m': program_method,
                       '-e': 'origin'}
             self.train_test_config_list[i % self.K].append(config)
 
-        start = time.time()
         for item in self.train_test_config_list:
+            if len(item) == 0:
+                continue
             train_list = self.train_test_config_list.copy()
             train_list.remove(item)
             train_list = [i for item in train_list for i in item]
@@ -103,6 +88,7 @@ class EFCIdentify2(BaseCCPipeline):
             train_cr_list = []
             train_sf_list = []
             train_cc_target_list = []
+
             for ccpl in train_rtd.ccpls:
                 CCE = find_CCE(ccpl)
                 train_CCE_list.append(CCE)
@@ -111,7 +97,7 @@ class EFCIdentify2(BaseCCPipeline):
                 CCE.append("error")
                 # new_data_df = ccpl.data_df[CCE]
                 # 使用文件的方式导入ssp,cr,sf特征矩阵信息
-                ssp, cr, sf = FeatureTestsHandler.get_feature_from_file(project_dir, self.cita, ccpl.program,
+                ssp, cr, sf = FeatureTestsHandler.get_feature_from_file(project_dir, ccpl.program,
                                                                         ccpl.bug_id)
                 ssp, cr, sf = ssp.values, cr.values, sf.values
                 train_ssp_list.append(torch.FloatTensor(ssp))
@@ -125,8 +111,6 @@ class EFCIdentify2(BaseCCPipeline):
                     else:
                         cc_target[i] = torch.FloatTensor([1, 0])
                 train_cc_target_list.append(cc_target)
-                # print(ccpl.program+ccpl.bug_id+" end")
-
             train_ssp = torch.vstack(tuple(train_ssp_list))
             train_cr = torch.vstack(tuple(train_cr_list))
             train_sf = torch.vstack(tuple(train_sf_list))
@@ -141,7 +125,7 @@ class EFCIdentify2(BaseCCPipeline):
                                                  cr=train_cr,
                                                  sf=train_sf,
                                                  ),
-                batch_size=min(args.batch_size, ssp.shape[0]),
+                batch_size=min(args.batch_size, train_ssp.shape[0]),
                 shuffle=True,
                 num_workers=0,
                 pin_memory=True,
@@ -156,16 +140,25 @@ class EFCIdentify2(BaseCCPipeline):
             if args.cuda:
                 mnet.cuda()
 
+            # loss function and optimizer
+            # criterion = torch.nn.MarginRankingLoss(margin=args.margin)
+            # criterion = torch.nn.CrossEntropyLoss()
             criterion = torch.nn.MSELoss()
+            # criterion=torch.nn.NLLLoss()
             optimizer = optim.Adam(mnet.parameters(), lr=args.lr)
+            # optimizer = optim.SGD(mnet.parameters(), lr=args.lr, momentum=args.momentum)
 
             # train the model
-            # EPOCH = 30
+            # EPOCH = 100
             for epoch in range(1, args.epochs):
                 # self.train(train_loader, mnet, criterion, optimizer, cc_target, epoch)
-                self.train_mnet(train_loader, mnet, criterion, optimizer, epoch)
-            self.test_mnet(mnet, test_rtd)
-            for ccpl in test_rtd.ccpls:
+                self._train_mnet(train_loader, mnet, criterion, optimizer, epoch)
+
+            # 逐一训练ccpl
+            rtd = ReadTrainData(self.project_dir, item, self.way)
+            train_list = rtd.ccpls
+            # self._test_(model, test_rtd)
+            for ccpl in train_list:
                 CCE = find_CCE(ccpl)
                 if len(CCE) == 0:
                     continue
@@ -208,8 +201,7 @@ class EFCIdentify2(BaseCCPipeline):
                         else:
                             train_target[i] = torch.FloatTensor([1, 0])
 
-                    ccpl.ssp, ccpl.cr, ccpl.sf = FeatureTestsHandler.get_feature_from_file(project_dir, self.cita,
-                                                                                           ccpl.program,
+                    ccpl.ssp, ccpl.cr, ccpl.sf = FeatureTestsHandler.get_feature_from_file(project_dir, ccpl.program,
                                                                                            ccpl.bug_id)
                     ssp_feature = ccpl.ssp.loc[train_index, :]
                     cr_feature = ccpl.cr.loc[train_index, :]
@@ -238,100 +230,111 @@ class EFCIdentify2(BaseCCPipeline):
                     if args.cuda:
                         cover_info_net.cuda()
                     for epoch in range(1, args.epochs):
-                        self.train_cnet(train_loader, cover_info_net, criterion, optimizer_cover_info, epoch)
+                        self._train_cnet(train_loader, cover_info_net, criterion, optimizer_cover_info, epoch)
 
-                    self.test_cnet(ccpl, cover_info_net, test_index)
+                    mnet_copy = copy.deepcopy(mnet)
+
+                    model = ExpertFeatureCombinedNetwork(cover_info_net, mnet_copy)
+
+                    if args.cuda:
+                        model.cuda()
+
+                    optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
+
+                    for epoch in range(1, args.combined_epochs):
+                        self._train(train_loader, model, criterion, optimizer, epoch)
+                    self._test(ccpl, model, test_index)
                 key = ccpl.program + ccpl.bug_id
                 if key not in self.target4vote:
                     self.target4vote[key] = []
                     self.ccpl4vote[key] = ccpl
                 self.target4vote[key].append(ccpl.cc_index)
-            end = time.time()
 
-    def train_mnet(self, train_loader, mnet, criterion, optimizer, epoch):
+                # ccpl.evaluation()
+                # ccpl.calRes("trim")
+
+    def _train(self, train_loader, model, criterion, optimizer, epoch):
+        model.train()
+        for batch_idx, (tests, target, ssp, cr, sf) in enumerate(train_loader):
+            if args.cuda:
+                tests, target, ssp, cr, sf = tests.cuda(), target.cuda(), ssp.cuda(), cr.cuda(), sf.cuda()
+            tests, ssp, cr, sf, = tests.to(torch.float), ssp.to(torch.float), cr.to(torch.float), sf.to(torch.float)
+
+            prob = model(tests, ssp, cr, sf)
+            if args.cuda:
+                target = target.cuda()
+            loss = criterion(prob, target)
+
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            if epoch % 10 == 0:
+                print('Train Epoch: {} [{}/{}]\t'
+                      'loss: {}'.format(
+                    epoch, batch_idx * len(target), len(train_loader.dataset),
+                    loss,
+                ))
+
+    def _test(self, ccpl, model, test_index):
+        model.eval()
+        with torch.no_grad():
+            for item in test_index:
+                test = ccpl.passing_tests.loc[item, :]
+                test = test.iloc[:-1]
+                test, ssp, cr, sf = test, ccpl.ssp.loc[item], ccpl.cr.loc[item], \
+                                    ccpl.sf.loc[item]
+
+                test, ssp, cr, sf = torch.tensor(test.values), torch.tensor(ssp.values), torch.tensor(
+                    cr.values), torch.tensor(sf.values)
+
+                if args.cuda:
+                    test, ssp, cr, sf = test.cuda(), ssp.cuda(), cr.cuda(), sf.cuda()
+                test = torch.unsqueeze(test.to(torch.float), dim=0)
+                ssp = torch.unsqueeze(ssp.to(torch.float), dim=0)
+                cr = torch.unsqueeze(cr.to(torch.float), dim=0)
+                sf = torch.unsqueeze(sf.to(torch.float), dim=0)
+
+                prob = model(test, ssp, cr, sf)
+
+                if prob[0][0] < prob[0][1]:
+                    ccpl.cc_index[item] = True
+
+    def _train_mnet(self, train_loader, mnet, criterion, optimizer, epoch):
         mnet.train()
-        for batch_idx, (target, susScore, covRatio, similarityFactor) in enumerate(train_loader):
+        for batch_idx, (target, ssp, cr, sf) in enumerate(train_loader):
 
             if args.cuda:
-                susScore, covRatio, similarityFactor = susScore.cuda(), covRatio.cuda(), similarityFactor.cuda()
+                ssp, cr, sf = ssp.cuda(), cr.cuda(), sf.cuda()
 
-            susScore = susScore.to(torch.float)
-            covRatio = covRatio.to(torch.float)
-            similarityFactor = similarityFactor.to(torch.float)
+            ssp = ssp.to(torch.float)
+            cr = cr.to(torch.float)
+            sf = sf.to(torch.float)
 
             # compute output
-            # Research question: random strategy or vote?
-            prob = mnet(susScore, covRatio, similarityFactor)
+            prob = mnet(ssp, cr, sf)
 
-            # print(prob)
-
-            # target = target[:, 1]
-            # target = torch.from_numpy(target.values)
             # 将张量组织成prob.shape形状的的浮点型序列
             target = target.float().view(prob.shape)
 
             if args.cuda:
                 target = target.cuda()
 
-            # loss_MLPDFL = criterion(prob, target.squeeze(dim=1).long())
-            loss_MLPDFL = criterion(prob, target)
-
-            loss = loss_MLPDFL
+            loss = criterion(prob, target)
 
             # compute gradient and do optimizer step
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
-            # if epoch % 10 == 0:
-            #     print('Train Epoch: {} [{}/{}]\t'
-            #           'loss: {}'.format(
-            #         epoch, batch_idx * len(susScore), len(train_loader.dataset),
-            #         loss,
-            #     ))
+            if epoch % 10 == 0:
+                print('Train mnet Epoch: {} [{}/{}]\t'
+                      'loss: {}'.format(
+                    epoch, batch_idx * len(ssp), len(train_loader.dataset),
+                    loss,
+                ))
 
-            print('Train Epoch: {} [{}/{}]\t'
-                  'loss: {}'.format(
-                epoch, batch_idx * len(susScore), len(train_loader.dataset),
-                loss,
-            ))
-
-    def test_mnet(self, mnet, test_rtd):
-        for ccpl in test_rtd.ccpls:
-            CCE = find_CCE(ccpl)
-            if len(CCE) == 0:
-                return
-            CCE.append("error")
-            # new_data_df = ccpl.data_df[CCE]
-            ssp, cr, sf = FeatureTestsHandler.get_feature_from_file(project_dir, self.cita, ccpl.program, ccpl.bug_id)
-            susScore_features = pd.DataFrame(ssp, index=ccpl.cc_index.index.values)
-            covRatio_features = pd.DataFrame(cr, index=ccpl.cc_index.index.values)
-            similarityFactor_features = pd.DataFrame(sf, index=ccpl.cc_index.index.values)
-
-            mnet.eval()
-            with torch.no_grad():
-                for index, susScore_feature in susScore_features.iterrows():
-                    susScore = torch.tensor(susScore_feature.values)
-                    covRatio = torch.tensor(covRatio_features.loc[index].values)
-                    similarityFactor = torch.tensor(similarityFactor_features.loc[index].values)
-
-                    if args.cuda:
-                        susScore, covRatio, similarityFactor = susScore.cuda(), covRatio.cuda(), similarityFactor.cuda()
-
-                    # ssp = susScore.to(torch.float)
-                    # cr = covRatio.to(torch.float)
-                    # sf = similarityFactor.to(torch.float)
-
-                    ssp = torch.unsqueeze(susScore.to(torch.float), dim=0)
-                    cr = torch.unsqueeze(covRatio.to(torch.float), dim=0)
-                    sf = torch.unsqueeze(similarityFactor.to(torch.float), dim=0)
-
-                    prob = mnet(ssp, cr, sf)
-                    prob = prob.view(1, 2)
-                    if prob[0][0] < prob[0][1]:
-                        ccpl.cc_index[index] = True
-
-    def train_cnet(self, train_loader, cnet, criterion, optimizer, epoch):
+    def _train_cnet(self, train_loader, cnet, criterion, optimizer, epoch):
         cnet.train()
         for batch_idx, (tests, target, _, _, _) in enumerate(train_loader):
             if args.cuda:
@@ -355,28 +358,11 @@ class EFCIdentify2(BaseCCPipeline):
                     loss,
                 ))
 
-    def test_cnet(self, ccpl, model, test_index):
-        model.eval()
-        with torch.no_grad():
-            for item in test_index:
-                test = ccpl.passing_tests.loc[item, :]
-                test = test.iloc[:-1]
-                test = torch.tensor(test.values)
-
-                if args.cuda:
-                    test = test.cuda()
-                test = torch.unsqueeze(test.to(torch.float), dim=0)
-
-                prob = model(test)
-
-                if prob[0][0] < prob[0][1]:
-                    ccpl.cc_index[item] = True
-
     def vote(self):
         for key in self.target4vote:
             ccpl = self.ccpl4vote[key]
             cc_index = pd.Series([False] * len(ccpl.ground_truth_cc_index.index),
-                                 index=ccpl.grounsklearn.datasets.load_bostond_truth_cc_index.index)
+                                 index=ccpl.ground_truth_cc_index.index)
 
             vote_list = self.target4vote[key]
             if len(vote_list) == 0:
@@ -431,12 +417,12 @@ def getpT(data):
 
 
 if __name__ == "__main__":
-    # program_list = ["Chart"]
     program_list = ["Chart", "Lang", "Math", "Mockito", "Time"]
+    # program_list = ["Chart"]
     for program in program_list:
         configs = {'-d': 'd4j', '-p': program, '-i': '1', '-m': method_para, '-e': 'origin'}
         sys.argv = os.path.basename(__file__)
-        cbccpl = EFCIdentify2(project_dir, configs, 1, "2024-1-11-EFC-4", 5)
-        for i in range(5):
+        cbccpl = EFCIdentify(project_dir, configs, 1, "2024-1-10-EFC-v2", 10)
+        for i in range(2):
             cbccpl.find_cc_index()
         cbccpl.vote()

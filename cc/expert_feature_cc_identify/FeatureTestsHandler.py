@@ -12,7 +12,7 @@ class FeatureTestsHandler:
         pass
 
     @staticmethod
-    def get_feature_from_file(project_dir, cita, program, bug_id):
+    def get_feature_from_file(project_dir, program, bug_id):
         save_path = os.path.join(project_dir, "feature", "MLP", f"{program}-passing-csv-1")
         # file_path = f"{save_path}/cce-{cita}-{program}-{bug_id}.npy"
         file_path = f"{save_path}/features-{program}-{bug_id}.csv"

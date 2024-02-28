@@ -94,7 +94,7 @@ class ExpertFeatureCombinedIdentify(BaseCCPipeline):
             train_tests = self.passing_tests.iloc[train_index, :-1]
             train_target = self.cc_target[train_index]
 
-            self.ssp, self.cr, self.sf = FeatureTestsHandler.get_feature_from_file(project_dir, self.cita, self.program,
+            self.ssp, self.cr, self.sf = FeatureTestsHandler.get_feature_from_file(project_dir, self.program,
                                                                                    self.bug_id)
             ssp_feature = self.ssp.iloc[train_index, :]
             cr_feature = self.cr.iloc[train_index, :]

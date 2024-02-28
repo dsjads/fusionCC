@@ -5,3 +5,4 @@ pyclustering==0.10.1.2
 PyYAML==6.0
 scikit_learn==1.2.1
 scipy==1.7.1
+torch==1.10.2
