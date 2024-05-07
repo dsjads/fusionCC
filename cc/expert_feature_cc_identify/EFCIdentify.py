@@ -422,7 +422,7 @@ if __name__ == "__main__":
     for program in program_list:
         configs = {'-d': 'd4j', '-p': program, '-i': '1', '-m': method_para, '-e': 'origin'}
         sys.argv = os.path.basename(__file__)
-        cbccpl = EFCIdentify(project_dir, configs, 1, "2024-1-10-EFC-v2", 10)
+        cbccpl = EFCIdentify(project_dir, configs, 1, "2024-1-10-EFC-v2", 5)
         for i in range(2):
             cbccpl.find_cc_index()
         cbccpl.vote()

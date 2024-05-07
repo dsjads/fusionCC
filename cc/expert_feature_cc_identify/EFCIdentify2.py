@@ -18,7 +18,6 @@ from cc.expert_feature_cc_identify.FeatureTestsHandler import FeatureTestsHandle
 from cc.expert_feature_cc_identify.PassingTestsHandler import PassingTestsHandler
 from cc.expert_feature_cc_model.EFCDataLoader import CombinedInfoLoaderWithoutCovInfo, CombinedInfoLoader
 from cc.expert_feature_cc_model.ExpertFeatureCombinedNetwork import Net1, Net3, Net4, EFCNetwork, CoverageInfoSematicNet
-from utils.write_util import write_rank_to_txt
 import argparse
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -62,7 +61,7 @@ args = parser.parse_args()
 
 # 将覆盖语义和专家特征分开训练，将两份结果取或
 class EFCIdentify2(BaseCCPipeline):
-    def __init__(self, project_dir, configs, cita, way, K , M):
+    def __init__(self, project_dir, configs, cita, way, K, M):
         super().__init__(project_dir, configs, way)
         self.cita = cita
         self.K = K
@@ -386,7 +385,7 @@ class EFCIdentify2(BaseCCPipeline):
         for key in self.target4vote:
             ccpl = self.ccpl4vote[key]
             cc_index = pd.Series([False] * len(ccpl.ground_truth_cc_index.index),
-                                 index=ccpl.grounsklearn.datasets.load_bostond_truth_cc_index.index)
+                                 index=ccpl.ground_truth_cc_index.index)
 
             vote_list = self.target4vote[key]
             if len(vote_list) == 0:
@@ -446,7 +445,7 @@ if __name__ == "__main__":
     for program in program_list:
         configs = {'-d': 'd4j', '-p': program, '-i': '1', '-m': method_para, '-e': 'origin'}
         sys.argv = os.path.basename(__file__)
-        cbccpl = EFCIdentify2(project_dir, configs, 1, "2024-1-11-EFC-4", 5 , 5)
+        cbccpl = EFCIdentify2(project_dir, configs, 1, "2024-4-2-EFC-1", 5, 5)
         for i in range(5):
             cbccpl.find_cc_index()
         cbccpl.vote()

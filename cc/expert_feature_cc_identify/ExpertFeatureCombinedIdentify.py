@@ -115,7 +115,7 @@ class ExpertFeatureCombinedIdentify(BaseCCPipeline):
 
             elements_length = len(self.CCE) - 1
             output_dim = 2
-            cover_info_net = CoverageInfoSematicNet(elements_length, output_dim)
+            cover_info_net = CoverageInfoSematicNet(elements_length)
 
             ssp_net = Net1(ssp_feature.shape[1])
             cr_net = Net2(cr_feature.shape[1])
@@ -124,7 +124,7 @@ class ExpertFeatureCombinedIdentify(BaseCCPipeline):
             combined_net = Net4(ssp_feature.shape[1]*3)
             # combined_net = CombinedNet(ssp_feature.shape[1] * 3)
             # model = ExpertFeatureCombinedNetwork(cover_info_net, ssp_net, cr_net, sf_net, combined_net)
-            model = ExpertFeatureCombinedNetwork(cover_info_net, ssp_net, cr_net, sf_net, combined_net)
+            model = ExpertFeatureCombinedNetwork(cover_info_net, ssp_net)
             # model4 = Net4(ssp_feature.shape[1] * 3)
             # model = MLPDFLnet(ssp_net, cr_net, sf_net, model4)
             if args.cuda:

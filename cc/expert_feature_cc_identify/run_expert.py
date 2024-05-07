@@ -11,7 +11,7 @@ def main():
         # "Mockito",
         # "Time"
     # ]
-    # program_list = ["Chart"]
+    # program_list = ["Time"]
     program_list = ["Chart", "Lang", "Math", "Mockito", "Time"]
 
     # run(program_list, "Chart", 0, TripletCCIdentify, name, 0.9)
@@ -23,8 +23,8 @@ def main():
     }
     # name = "2022-11-10-triplet-trim-" + str(true_ratio) + "-" + str(select_ratio) + "-70-"
     # multi_process_run(program_list, TripletCCIdentify, name, arg_dict)
-    name = "EFC_2023-12-28_100"
-    run(program_list, "Chart", 1, ExpertFeatureCombinedIdentify, name, arg_dict)
+    name = "Rnn_2024-05-07"
+    run(program_list, "Chart", 1, EFCIdentifyWithoutExpertFeature, name, arg_dict)
 
 
 if __name__ == "__main__":

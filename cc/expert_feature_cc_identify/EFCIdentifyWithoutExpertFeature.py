@@ -9,17 +9,19 @@ from cc.cc_baselines.BaseCCPipeline import BaseCCPipeline
 from cc.expert_feature_cc_identify.FailingTestsHandler import FailingTestsHandler
 from cc.expert_feature_cc_identify.FeatureTestsHandler import FeatureTestsHandler
 from cc.expert_feature_cc_identify.PassingTestsHandler import PassingTestsHandler
+from cc.expert_feature_cc_model.BiLSTMNet import BiLSTMNet
+from cc.expert_feature_cc_model.CnnNet import CnnSematicNet
 from cc.expert_feature_cc_model.EFCDataLoader import CombinedInfoLoaderWithoutExpertFeature
 import argparse
 
 from cc.expert_feature_cc_model.ExpertFeatureCombinedNetwork import CoverageInfoSematicNet, \
-    ExpertFeatureCombinedNetwork, Net1, Net2, Net3, Net4, EFCNetworkWithoutExpertFeature
+    ExpertFeatureCombinedNetwork, Net1, Net2, Net3, Net4
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 # Training settings
 parser = argparse.ArgumentParser(description='Triplet for CC')
-parser.add_argument('--batch-size', type=int, default=16, metavar='N',
+parser.add_argument('--batch-size', type=int, default=32, metavar='N',
                     help='input batch size for training (default: 16)')
 parser.add_argument('--epochs', type=int, default=30, metavar='N',
                     help='number of epochs to train (default: 30)')
@@ -105,10 +107,9 @@ class EFCIdentifyWithoutExpertFeature(BaseCCPipeline):
             )
 
             elements_length = len(self.CCE) - 1
-            output_dim = 30
-            cover_info_net = CoverageInfoSematicNet(elements_length, output_dim)
-
-            model = EFCNetworkWithoutExpertFeature(cover_info_net, output_dim)
+            # model = CoverageInfoSematicNet(elements_length)
+            # model=CnnSematicNet(elements_length)
+            model = BiLSTMNet(10,elements_length, 4, 0)
             if args.cuda:
                 model.cuda()
             # loss function and optimizer
