@@ -31,9 +31,6 @@ method_list = [
     "ochiai",
     "barinel",
     # "Op2"
-    # "MLP-FL",
-    # "CNN-FL",
-    # "RNN-FL"
     ]
 method_para = ""
 for method in method_list[:-1]:

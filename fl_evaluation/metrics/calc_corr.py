@@ -2,6 +2,7 @@ from .metrics import *
 from .dl_metrics import *
 from .fs_metrics import *
 
+
 def calc_corr(data, method):
     features_list = list(data.columns)[:-1]
     label = list(data.columns)[-1]
@@ -74,7 +75,7 @@ def calc_corr(data, method):
         for feature in features_list:
             corr_dict[feature] = Jaccard(data[feature],data[label])
 
-    elif method == "MLP-FL":
+    elif method == "Expert-FL":
         corr_dict = MLP(data[features_list], data[label])
     elif method == "CNN-FL":
         corr_dict = CNN(data[features_list], data[label])

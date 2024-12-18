@@ -12,9 +12,6 @@
 
 ``pip install -r requirements.txt``
 
-### Empirical Study
-The scripts below are running with our hand-made data Chart-0 for a quick start.
-The full Defects4J coverage data can be found at https://bitbucket.org/rjust/fault-localization-data/src/master/
 #### RQ1
 - Run the scripts in `./cc/cc_baselines`
 
@@ -28,7 +25,7 @@ The output can be found under folder `./results/`
 ### Evaluation
 
 #### RQ3 & RQ4
-- Run the script: `./cc/triplet_cc_identify/run_triplet.py`
+- Run the script: `./cc/triplet_cc_identify/run_fusion.py`
 
 The output can be found under folder `./results/`
 
@@ -49,7 +46,7 @@ Eample output:
 
 ## Project Structure
 ```
-merit
+fusionCC
 ├── CONFIG.py
 ├── requirements.txt
 ├── cc

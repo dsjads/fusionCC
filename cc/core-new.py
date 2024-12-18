@@ -47,7 +47,7 @@ def run(program_list, start_program, start_program_id, identifyMethod, way, arg_
                     end = time.time()
                     time_ = dict()
                     time_["time"] = end - start
-                    save_path = os.path.join(project_dir, "new_results", way, "time.txt")
+                    save_path = os.path.join(project_dir, "results", way, "time.txt")
                     write_rank_to_txt(time_, save_path, program, i)
 
                     value, record, original_record, config = pl._out()
@@ -56,18 +56,18 @@ def run(program_list, start_program, start_program_id, identifyMethod, way, arg_
                         max_pl = pl
                 if max_original_record is None or max_record is None or max_config is None:
                     continue
-                original_record_path = os.path.join(project_dir, "new_results", way, "origin_record.txt")
-                record_path = os.path.join(project_dir, "new_results", way, "record.txt")
+                original_record_path = os.path.join(project_dir, "results", way, "origin_record.txt")
+                record_path = os.path.join(project_dir, "results", way, "record.txt")
                 write_rank_to_txt(max_original_record, original_record_path, program, i)
                 write_rank_to_txt(max_record, record_path, program, i)
 
-                config_path = os.path.join(project_dir, "new_results", way, "config.txt")
+                config_path = os.path.join(project_dir, "results", way, "config.txt")
                 write_rank_to_txt(max_config, config_path, program, i)
             # break
                 # pl.evaluation()
                 max_pl.calRes("trim")
-    parse(os.path.join(project_dir, "new_results", way), way+"_MFR.txt", "FL.xlsx")
-    parse(os.path.join(project_dir, "new_results", way), "origin_record.txt", "precision_recall.xlsx")
+    parse(os.path.join(project_dir, "results", way), way+"_MFR.txt", "FL-1.xlsx")
+    parse(os.path.join(project_dir, "results", way), "origin_record.txt", "precision_recall.xlsx")
 
 
 from multiprocessing import Process

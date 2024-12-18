@@ -85,13 +85,13 @@ class RandomForestsCCPipeline(BaseCCPipeline):
 def main():
     program_list = [
         "Chart",
-        "Closure-2023-12-6-1",
+        # # "Closure-2023-12-6-1",
         "Lang",
         "Math",
         "Mockito",
         "Time"
     ]
-    run(program_list, "Chart", 1, RandomForestsCCPipeline, "2024-RF", 5)
+    run(program_list, "Chart", 1, RandomForestsCCPipeline, "2024-5-15-RF", 5)
 
 
 
@@ -103,4 +103,4 @@ if __name__ == "__main__":
     # svmccpl = RandomForestsCCPipeline(project_dir, configs, 5, "RandomForest")
     # svmccpl.find_cc_index()
     # svmccpl.evaluation()
-    # svmccpl.calRes()
+    # svmccpl.calRes(

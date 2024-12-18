@@ -62,7 +62,7 @@ class CCPrecisionPipeline(ReadData):
         self.data_obj.reload(self.cc_data_df)
 
     def _calRes(self, way):
-        save_rank_path = os.path.join(self.project_dir, "new_results", "survey")
+        save_rank_path = os.path.join(self.project_dir, "results", "survey")
         cc = CalculateSuspiciousness(self.data_obj, self.method, save_rank_path, way)
         cc.run()
         # print(cc.rank_MFR_dict)

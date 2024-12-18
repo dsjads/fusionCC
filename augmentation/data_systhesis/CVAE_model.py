@@ -99,7 +99,7 @@ class Decoder(nn.Module):
             c = idx2onehot(c, n=2).squeeze(0).squeeze(0)
             z = torch.cat((z, c), dim=-1)
 
-        # x = self.MLP(z)
+        # x = self.Expert(z)
         h = self.linear(z).unsqueeze(0).unsqueeze(0)
         h1 = F.max_pool2d(F.relu(self.conv1(h)), (1, self.step))
         h2 = F.max_pool2d(F.relu(self.conv2(h1)), (1, self.step))

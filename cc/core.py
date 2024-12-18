@@ -23,13 +23,13 @@ def run(program_list, start_program, start_program_id, identifyMethod, way, n):
                 end = time.time()
                 time_ = dict()
                 time_["time"] = end - start
-                save_path = os.path.join(project_dir, "new_results", way, "time.txt")
+                save_path = os.path.join(project_dir, "results", way, "time.txt")
                 write_rank_to_txt(time_, save_path, program, i)
                 pl.evaluation()
                 pl.calRes("trim")
                 pl.calRes("relabel")
 
-    parse(os.path.join(project_dir, "new_results", way), "origin_record.txt", "precision_recall.xlsx")
+    parse(os.path.join(project_dir, "results", way), "origin_record.txt", "precision_recall.xlsx")
     for operation in ["trim", "relabel"]:
         op_way = way+"-"+operation
-        parse(os.path.join(project_dir, "new_results", op_way), op_way+"_MFR.txt", "FL.xlsx")
+        parse(os.path.join(project_dir, "results", op_way), op_way+"_MFR.txt", "FL-1.xlsx")

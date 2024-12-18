@@ -18,7 +18,7 @@ def parse(file_dir, input_file_name, output_file_name):
 
     data_slice = data[bool_list]
 
-    # excel_name = "FL.xlsx"
+    # excel_name = "FL-1.xlsx"
     excel_path = os.path.join(file_dir, output_file_name)
 
     if output_file_name == "precision_recall.xlsx":
@@ -37,7 +37,7 @@ def parse(file_dir, input_file_name, output_file_name):
 
 
 def survey_parse():
-    data_dir = os.path.join(project_dir, "new_results")
+    data_dir = os.path.join(project_dir, "results")
 
     all_data_precision_relabel = pd.DataFrame()
     all_data_precision_trim = pd.DataFrame()
@@ -80,4 +80,4 @@ def survey_parse():
         all_data_recall_trim.to_excel(writer, sheet_name="default")
 
 
-    # parse(os.path.join(project_dir, "new_results", "survey"), "origin_record.txt", "precision_recall.xlsx")
+    # parse(os.path.join(project_dir, "results", "survey"), "origin_record.txt", "precision_recall.xlsx")

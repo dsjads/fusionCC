@@ -9,7 +9,7 @@ from torch import optim
 
 from CONFIG import *
 from cc.cc_baselines.BaseCCPipeline import BaseCCPipeline
-from cc.expert_feature_cc_model.EFCDataLoader import CombinedInfoTestCaseLoader
+from cc.fusion_cc_model.EFCDataLoader import CombinedInfoTestCaseLoader
 from cc.discard_method.TripletWithExpertFeatureNetwork import Net, TripletWithExpertFeatureNet, Net4, Net1, \
     Net2, Net3
 

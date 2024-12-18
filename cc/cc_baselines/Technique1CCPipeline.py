@@ -109,7 +109,11 @@ class Technique1CCPipeline(BaseCCPipeline):
 
 def main():
     program_list = [
-        "Chart"
+        "Chart",
+        "Lang",
+        "Math",
+        "Mockito",
+        "Time"
     ]
     run(program_list, "Chart", 1, Technique1CCPipeline, "2024-Tech-I", 1)
 

@@ -7,7 +7,7 @@ def calculate_metrics(true_positive, detected, ground_truth):
 
 
 # 文件路径
-file_path = 'new_results/2024-1-11-EFC-4/origin_record.txt'
+file_path = 'results/Fusion_2024_11_9/origin_record.txt'
 
 # 读取文件内容
 with open(file_path, 'r') as file:

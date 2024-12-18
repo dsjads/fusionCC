@@ -69,7 +69,7 @@ class Pipeline:
             self.data_obj = CVAESynthesisData(self.data_obj)
             self.data_obj.process()
 
-        save_rank_path = os.path.join(self.project_dir, "new_results")
+        save_rank_path = os.path.join(self.project_dir, "results")
         cc = CalculateSuspiciousness(self.data_obj, self.method, save_rank_path, self.experiment)
         cc.run()
 

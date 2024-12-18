@@ -181,7 +181,7 @@ if __name__ == "__main__":
     # ccpl.find_cc_index()
     program_list = [
         # "Chart",
-        "Closure-2023-12-6-1",
+        # "Closure-2023-12-6-1",
         # "Lang",
         # "Math",
         # "Mockito",

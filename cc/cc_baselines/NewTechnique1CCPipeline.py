@@ -58,7 +58,7 @@ class NewTechnique1CCPipeline(BaseCCPipeline):
     def _is_CCE(self, fail_data, pass_data):
         fT = self.getfT(fail_data)
         pT = self.getpT(pass_data)
-        if ((fT == 1.0) and (pT < self.cita)):
+        if (fT == 1.0) and (pT < self.cita):
             return True
         else:
             return False
@@ -96,31 +96,31 @@ def main():
     program_list = [
         "Chart",
         # "Closure-2023-12-6-1",
-        # "Lang",
-        # "Math",
-        # "Mockito",
-        # "Time"
+        "Lang",
+        "Math",
+        "Mockito",
+        "Time"
     ]
-    run(program_list, "Chart", 1, NewTechnique1CCPipeline, "2022-9-27-Tech-I", 1)
+    run(program_list, "Chart", 1, NewTechnique1CCPipeline, "2024-5-8-Tech-I", 1)
 
 
 
 if __name__ == "__main__":
     # main()
     # task_complete("Tech-I end")
-    program_list = [
-        # "Chart",
+    program_list = [------------
+        "Chart",
         # "Closure-2023-12-6-1",
-        # "Lang",
+        "Lang",
         "Math",
         "Mockito",
-        # "Time"
+        "Time"
     ]
     for program in program_list:
         for i in cc_info[program]:
             configs = {'-d': 'd4j', '-p': program, '-i': i, '-m': method_para, '-e': 'origin'}
             sys.argv = os.path.basename(__file__)
-            ccpl = NewTechnique1CCPipeline(project_dir, configs, 0.7, "2022-09-29-New-Tech-I")
+            ccpl = NewTechnique1CCPipeline(project_dir, configs, 1, "2024-5-15-New-Tech-I")
             ccpl.find_cc_index()
             ccpl.evaluation()
             ccpl.calRes("trim")

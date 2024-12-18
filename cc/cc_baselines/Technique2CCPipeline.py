@@ -39,7 +39,7 @@ class Technique2CCPipeline(BaseCCPipeline):
     #     if len(data_df[data_df["error"] == 0]) == 0:
     #         record = dict()
     #         record["msg"] = "No passing tests"
-    #         save_path = os.path.join(self.project_dir, "new_results", self.way, "record.txt")
+    #         save_path = os.path.join(self.project_dir, "results", self.way, "record.txt")
     #         write_rank_to_txt(record, save_path, self.program, self.bug_id)
     #         return
     #
@@ -132,9 +132,13 @@ def u(p_e):
 
 def main():
     program_list = [
-        "Chart"
+        "Chart",
+        "Lang",
+        "Math",
+        "Mockito",
+        "Time"
     ]
-    run(program_list, "Chart", 1, Technique2CCPipeline, "2024-Tech-II", 1)
+    run(program_list, "Chart", 1, Technique2CCPipeline, "2024-5-15-Tech-II", 1)
 
 if __name__ == "__main__":
     main()
