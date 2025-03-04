@@ -10,7 +10,6 @@ from utils.task_util import task_complete
 from utils.write_util import write_rank_to_txt
 
 from CONFIG import *
-from cc.core import run
 
 
 class SVMBasedCCPipeline(BaseCCPipeline):
@@ -20,7 +19,7 @@ class SVMBasedCCPipeline(BaseCCPipeline):
         self.N = min(N, len(data_df[data_df["error"] == 0]))
         self.cc_index = None
 
-    def _find_cc_index(self):
+    def find_cc_index(self):
         data_df = self.load_data()
         N = self.N
         TP_data = data_df[data_df["error"] == 0]
@@ -61,7 +60,6 @@ class SVMBasedCCPipeline(BaseCCPipeline):
         container.iloc[cc_index] = True
         self.cc_index = container
 
-    # tp为需要拆分的集合，n为拆分数，result为获得的拆分结果
     def TPsetSplit(self, tp, n):
         shuffled = tp.sample(frac=1)
         result = np.array_split(shuffled, n)
@@ -81,28 +79,29 @@ class SVMBasedCCPipeline(BaseCCPipeline):
             datas_with_index.append(data)
         return datas_with_index
 
+
 def main():
-    program_list = [
-        "Chart",
-        "Closure-2023-12-6-1",
-        "Lang",
-        "Math",
-        "Mockito",
-        "Time"
-    ]
-    run(program_list, "Chart", 1, SVMBasedCCPipeline, "2024-SVM", 4)
+    for program, program_version_num in zip(program_list, program_version_num_list):
+        for i in range(1, program_version_num + 1):
+            if (program == "Mockito" and i == 19) or (program == "Chart" and i == 10) or (
+                    program == "Closure" and (i == 110 or i == 117 or i == 118 or i == 120 or i == 125 or i == 129)):
+                continue
+            print(program, i)
+            configs = {'-d': 'd4j', '-p': program, '-i': i, '-m': method_para, '-e': 'origin'}
+            sys.argv = os.path.basename(__file__)
+            svmccpl = SVMBasedCCPipeline(project_dir, configs, 4, "SVM")
+            svmccpl.find_cc_index()
+            svmccpl.evaluation()
+
 
 if __name__ == "__main__":
     main()
     task_complete("SVM end")
-#
-#     # # project_dir = os.path.join(os.path.dirname(__file__), "..", "..")
-#     configs = {'-d': 'd4j', '-p': 'Chart', '-i': '0', '-m': 'dstar', '-e': 'origin'}
-#     sys.argv = ["SVMBasedCCPipeline.py"]
-#     svmccpl = SVMBasedCCPipeline(project_dir, configs, 4, "SVM")
-#     svmccpl.find_cc_index()
-#     print(svmccpl.cc_index)
-#     svmccpl.evaluation()
-
+    # configs = {'-d': 'd4j', '-p': 'Chart', '-i': '1', '-m': 'dstar', '-e': 'origin'}
+    # sys.argv = ["SVMBasedCCPipeline.py"]
+    # svmccpl = SVMBasedCCPipeline(project_dir, configs, 4, "SVM")
+    # svmccpl.find_cc_index()
+    # print(svmccpl.cc_index)
+    # svmccpl.evaluation()
 
 

@@ -285,6 +285,7 @@ class CBNNCCIdentify2(BaseCCPipeline):
             ccpl.cc_index = cc_index
             ccpl.evaluation()
             ccpl.calRes("relabel")
+            ccpl.calRes("trim")
 
 
 def find_CCE(ccpl):
@@ -322,8 +323,8 @@ def getpT(data):
 
 
 if __name__ == "__main__":
-    program_list = ["Chart"]
-    # program_list = ["Chart", "Lang", "Math", "Mockito", "Time"]
+    # program_list = ["Chart"]
+    program_list = ["Chart", "Lang", "Math", "Mockito", "Time"]
     for program in program_list:
         configs = {'-d': 'd4j', '-p': program, '-i': '1', '-m': method_para, '-e': 'origin'}
         sys.argv = os.path.basename(__file__)

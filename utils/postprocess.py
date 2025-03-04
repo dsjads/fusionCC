@@ -18,7 +18,7 @@ def parse(file_dir, input_file_name, output_file_name):
 
     data_slice = data[bool_list]
 
-    # excel_name = "FL.xlsx"
+    # excel_name = "FL-1.xlsx"
     excel_path = os.path.join(file_dir, output_file_name)
 
     if output_file_name == "precision_recall.xlsx":

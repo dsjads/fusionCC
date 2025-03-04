@@ -1,18 +1,21 @@
-import os
-import shutil
+import pandas as pd
 
-base_dir = r'C:\Users\zhangwentao\PycharmProjects\merit\data\d4j\data\Chart'  # Closure目录路径
+# 定义Excel文件路径
+excel_file = 'comp/context_change_data.xlsx'
+# 定义输出的txt文件路径
+output_txt_file = 'extracted_data.txt'
 
-for subdir in sorted(os.listdir(base_dir)):
-    sub_dir_path = os.path.join(base_dir, subdir)
-    if os.path.isdir(sub_dir_path):
-        dict_name = subdir  # 将子目录名赋值给dict_name
+# 使用pandas读取Excel文件
+df = pd.read_excel(excel_file)
 
-        gzoltars_path = os.path.join(sub_dir_path, 'gzoltars')
-        source_path = os.path.join(gzoltars_path, 'Chart', dict_name, 'matrix')
-        target_path = os.path.join(base_dir, dict_name, 'matrix')
+# 提取第一列和第四列，这里假设列标签是从0开始计数，即第0列和第3列
+# 如果你的列是命名的（比如'A', 'B', 'C'...），可以使用列名代替，如 `df[['Column1Name', 'Column4Name']]`
+extracted_data = df.iloc[:, [0, 3]]
 
-        # 移动文件
-        shutil.move(source_path, target_path)
+# 将提取的数据保存为txt文件，每一列数据之间用制表符分隔
+with open(output_txt_file, 'w') as file:
+    for index, row in extracted_data.iterrows():
+        # 写入每行数据，列之间用\t分隔，末尾不加换行符，除非你想每条记录独占一行
+        file.write('\t'.join(map(str, row)) + '\n')
 
-        print(f"移动完毕: {source_path} -> {target_path}")
+print(f"数据已成功提取并保存至{output_txt_file}")

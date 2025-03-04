@@ -65,7 +65,7 @@ def MLP(features, label):
             train_loss += float(loss.item())
             optim.step()
         if epoch % 20 == 0:
-            print('====>MLP training... Epoch: {} total loss: {:.4f}'.format(epoch, train_loss))
+            print('====>Expert training... Epoch: {} total loss: {:.4f}'.format(epoch, train_loss))
 
     emlp.eval()
     ret_dict = {}

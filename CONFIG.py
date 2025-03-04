@@ -1,10 +1,10 @@
 import os
 import warnings
 
-from pandas.core.common import SettingWithCopyWarning
+# from pandas.core.common import SettingWithCopyWarning
 
 os.environ["OMP_NUM_THREADS"] = '1'
-warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
+# warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 project_dir = os.path.dirname(__file__)
 
 method_list = [
@@ -31,7 +31,7 @@ method_list = [
     "ochiai",
     "barinel",
     # "Op2"
-    # "MLP-FL",
+    # "Expert-FL",
     # "CNN-FL",
     # "RNN-FL"
     ]

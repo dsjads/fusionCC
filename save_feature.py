@@ -63,7 +63,7 @@ def run(program_list, start_program, start_program_id, cita):
                 ssp = features.suspScore()
                 cr = features.covRatio()
                 sf = features.similarityFactor()
-                # load_path = f"{save_path}/MLP/{program}-{cita}/features-{program}-{i}.npy"
+                # load_path = f"{save_path}/Expert/{program}-{cita}/features-{program}-{i}.npy"
 
                 # merged_matrix = np.load(load_path)
                 merged_matrix = np.concatenate((ssp, cr, sf), axis=1)
@@ -71,8 +71,8 @@ def run(program_list, start_program, start_program_id, cita):
                 passing_data_df = new_data_df[new_data_df["error"] == 0]
                 df = pd.DataFrame(merged_matrix, index=passing_data_df.index)
 
-                npy_file_path = f"{save_path}/MLP/{program}-{cita}/features-{program}-{i}.npy"
-                df_file_path = f"{save_path}/MLP/{program}-passing-csv-{cita}/features-{program}-{i}.csv"
+                npy_file_path = f"{save_path}/Expert/{program}-{cita}/features-{program}-{i}.npy"
+                df_file_path = f"{save_path}/Expert/{program}-passing-csv-{cita}/features-{program}-{i}.csv"
 
                 np.save(npy_file_path, merged_matrix)
                 df.to_csv(df_file_path, index=True)
@@ -81,33 +81,10 @@ def run(program_list, start_program, start_program_id, cita):
 
 def main():
     program_list = [
-        # "Chart",
-        # "Lang"
-        # "Math"
-        # "Time"
-        "Mockito"
+        "Closure"
     ]
-    run(program_list, "Mockito", 2, 1)
+    run(program_list, "Closure", 2, 1)
 
 
 if __name__ == "__main__":
     main()
-    # program = "Chart"
-    # i = 2
-    # save_path = os.path.join(project_dir, "feature")
-    # if not os.path.exists(save_path):
-    #     os.mkdir(save_path)
-    # data = Defects4JDataLoader(os.path.join(project_dir, '..', 'data'), program, i)
-    # data.load()
-    # features = Features(data.data_df)
-    # ssp = features.suspScore()
-    # cr = features.covRatio()
-    # sf = features.similarityFactor()
-
-    # merged_matrix = np.concatenate((ssp, cr, sf), axis=1)
-    # file_path = f"{save_path}/cce-features-{program}-{i}.npy"
-    # np.save(file_path, merged_matrix)
-
-    # 加载.npy文件
-    # loaded_matrix = np.load(file_path)
-    # print(loaded_matrix.shape)

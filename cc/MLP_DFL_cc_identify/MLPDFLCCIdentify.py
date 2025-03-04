@@ -43,17 +43,6 @@ parser.add_argument('--name', default='MLPDFLCCNet', type=str,
 
 args = parser.parse_args()
 
-
-# def setup_seed(seed):
-#     torch.manual_seed(seed)
-#     torch.cuda.manual_seed_all(seed)
-#     np.random.seed(seed)
-#     random.seed(seed)
-#     torch.backends.cudnn.deterministic = True
-#
-# # 设置随机数种子
-# setup_seed(20)
-
 class CBNNCCIdentify(BaseCCPipeline):
     def __init__(self, project_dir, configs, cita, way, K):
         super().__init__(project_dir, configs, way)

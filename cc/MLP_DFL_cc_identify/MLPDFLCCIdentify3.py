@@ -313,7 +313,7 @@ if __name__ == "__main__":
     for program in program_list:
         configs = {'-d': 'd4j', '-p': program, '-i': '1', '-m': method_para, '-e': 'origin'}
         sys.argv = os.path.basename(__file__)
-        cbccpl = CBNNCCIdentify3(project_dir, configs, 1, "2024-1-5-CBNN-k10-30-2", 10)
+        cbccpl = CBNNCCIdentify3(project_dir, configs, 1, "2024-1-5-CBNN-k10-30-", 5)
         for i in range(0, 10):
             cbccpl.find_cc_index()
         cbccpl.vote()

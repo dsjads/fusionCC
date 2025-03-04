@@ -1,3 +1,4 @@
+import numpy
 import numpy as np
 
 
@@ -30,10 +31,35 @@ def get_N_para(feature, label):
     return Ncf, Nuf, Ncs, Nus
 
 
-# Dstar, star is assigned to 2
+# Ncf: ef  Nuf: nf  Ncs:ep  Nus:ef
 def dstar(feature, label):
     Ncf, Nuf, Ncs, Nus = get_N_para(feature, label)
     return Ncf ** 2 / (Ncs + Nuf)
+
+
+def dstar_sub_one(feature, label):
+    Ncf, Nuf, Ncs, Nus = get_N_para(feature, label)
+    return 1 / (Ncs + Nuf)
+# Dstar, star is assigned to 2
+
+
+
+# Ochiai
+def ochiai(feature, label):
+    Ncf, Nuf, Ncs, Nus = get_N_para(feature, label)
+    div = (Ncf + Nuf) * (Ncf + Ncs)
+    div = 0 if div < 0 else div
+    return Ncf / np.sqrt(div)
+
+
+def ochiai_sub_one(feature, label):
+    Ncf, Nuf, Ncs, Nus = get_N_para(feature, label)
+    return 1 / np.sqrt(Ncf + Nuf)
+
+
+def ochiai_sub_two(feature, label):
+    Ncf, Nuf, Ncs, Nus = get_N_para(feature, label)
+    return 1 / np.sqrt(Ncf + Ncs)
 
 
 # Barinel
@@ -90,19 +116,51 @@ def Kulczynski2(feature, label):
     return ((Ncf / (Ncf + Nuf)) + (Ncf / (Ncf + Ncs))) / 2
 
 
-# Ochiai
-def ochiai(feature, label):
-    Ncf, Nuf, Ncs, Nus = get_N_para(feature, label)
-    div = (Ncf + Nuf) * (Ncf + Ncs)
-    div = 0 if div < 0 else div
-    return Ncf / np.sqrt(div)
-
-
 # Jaccard
 def Jaccard(feature, label):
     Ncf, Nuf, Ncs, Nus = get_N_para(feature, label)
     div = Ncf + Nuf + Ncs
     return Ncf / div
+
+
+def Jaccard_sub_one(feature, label):
+    Ncf, Nuf, Ncs, Nus = get_N_para(feature, label)
+    div = Ncf + Nuf + Ncs
+    return 1 / div
+
+
+def Tarantula(feature, label):
+    Ncf, Nuf, Ncs, Nus = get_N_para(feature, label)
+    tf = Ncf + Nuf
+    tp = Ncs + Nus
+    return (Ncf / tf) / (Ncf / tf + Ncs / tp)
+
+
+def Tarantula_sub_one(feature, label):
+    Ncf, Nuf, Ncs, Nus = get_N_para(feature, label)
+    tf = Ncf + Nuf
+    tp = Ncs + Nus
+    return 1 / (Ncf / tf + Ncs / tp)
+
+
+def naish1(feature, label):
+    Ncf, Nuf, Ncs, Nus = get_N_para(feature, label)
+    if Nuf > 0:
+        return -1
+    else:
+        return Nus
+
+
+def binary(feature, label):
+    Ncf, Nuf, Ncs, Nus = get_N_para(feature, label)
+    if Nuf >0:
+        return 0
+    else:
+        return 1
+
+def crosstab(feature,label):
+    Ncf,Nuf,Ncs,Nus=get_N_para(feature,label)
+    return Ncf
 
 
 # M2
@@ -162,6 +220,24 @@ def GP03(feature, label):
     return np.sqrt(np.abs(Ncf * Ncf - np.sqrt(Ncs)))
 
 
+# GP13
+def GP13(feature, label):
+    Ncf, Nuf, Ncs, Nus = get_N_para(feature, label)
+    return Ncf + Ncf / (2 * Ncs + Ncf)
+
+
+# GP13_sub_one
+def GP13_sub_one(feature, label):
+    Ncf, Nuf, Ncs, Nus = get_N_para(feature, label)
+    return 1 / (2 * Ncs + Ncf)
+
+
+# GP13_sub_two
+def GP13_sub_two(feature, label):
+    Ncf, Nuf, Ncs, Nus = get_N_para(feature, label)
+    return Ncf / (2 * Ncs + Ncf)
+
+
 # GP19
 def GP19(feature, label):
     Ncf, Nuf, Ncs, Nus = get_N_para(feature, label)
@@ -171,3 +247,13 @@ def GP19(feature, label):
 def Op2(feature, label):
     Ncf, Nuf, Ncs, Nus = get_N_para(feature, label)
     return Ncf - Ncs / (Ncs + Nus + 1)
+
+
+def Op2_sub_one(feature, label):
+    Ncf, Nuf, Ncs, Nus = get_N_para(feature, label)
+    return Ncs / (Ncs + Nus + 1)
+
+
+def Op2_sub_two(feature, label):
+    Ncf, Nuf, Ncs, Nus = get_N_para(feature, label)
+    return 1 / (Ncs + Nus + 1)

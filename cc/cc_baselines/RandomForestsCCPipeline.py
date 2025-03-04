@@ -14,16 +14,6 @@ class RandomForestsCCPipeline(BaseCCPipeline):
         self.fCCE = []
         self.N = N
 
-    # def find_cc_index(self):
-    #     data_df = self.data_obj.data_df
-    #     if len(data_df[data_df["error"] == 0]) == 0:
-    #         record = dict()
-    #         recourd["msg"] = "No passing tests"
-    #         save_path = os.path.join(self.project_dir, "results", self.way, "record.txt")
-    #         write_rank_to_txt(record, save_path, self.program, self.bug_id)
-    #         return
-    #     self._find_cc_index()
-
     def _find_cc_index(self):
         data_df = self.load_data()
         PT_data = data_df[data_df["error"] == 0]
@@ -85,13 +75,13 @@ class RandomForestsCCPipeline(BaseCCPipeline):
 def main():
     program_list = [
         "Chart",
-        "Closure-2023-12-6-1",
+        # # "Closure-2023-12-6-1",
         "Lang",
         "Math",
         "Mockito",
         "Time"
     ]
-    run(program_list, "Chart", 1, RandomForestsCCPipeline, "2024-RF", 5)
+    run(program_list, "Chart", 1, RandomForestsCCPipeline, "2024-5-15-RF", 5)
 
 
 
@@ -103,4 +93,4 @@ if __name__ == "__main__":
     # svmccpl = RandomForestsCCPipeline(project_dir, configs, 5, "RandomForest")
     # svmccpl.find_cc_index()
     # svmccpl.evaluation()
-    # svmccpl.calRes()
+    # svmccpl.calRes(

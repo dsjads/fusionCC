@@ -18,18 +18,16 @@ def run(program_list, start_program, start_program_id, identifyMethod, way, n):
                 # configs = {'-d': 'd4j', '-p': "Closure-2023-12-6-1", '-i': 36, '-m': method_para, '-e': 'origin'}
                 sys.argv = os.path.basename(__file__)
                 pl = identifyMethod(project_dir, configs, n, way)
-                start = time.time()
                 pl.find_cc_index()
-                end = time.time()
                 time_ = dict()
-                time_["time"] = end - start
+                # time_["time"] = pl.cost
                 save_path = os.path.join(project_dir, "new_results", way, "time.txt")
                 write_rank_to_txt(time_, save_path, program, i)
                 pl.evaluation()
-                pl.calRes("trim")
-                pl.calRes("relabel")
+                # pl.calRes("trim")
+                # pl.calRes("relabel")
 
-    parse(os.path.join(project_dir, "new_results", way), "origin_record.txt", "precision_recall.xlsx")
+    # parse(os.path.join(project_dir, "new_results", way), "origin_record.txt", "precision_recall.xlsx")
     for operation in ["trim", "relabel"]:
         op_way = way+"-"+operation
-        parse(os.path.join(project_dir, "new_results", op_way), op_way+"_MFR.txt", "FL.xlsx")
+        parse(os.path.join(project_dir, "new_results", op_way), op_way+"_MFR.txt", "FL-1.xlsx")

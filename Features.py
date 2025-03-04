@@ -7,6 +7,8 @@ from cc.triplet_cc_identify.FailingTestsHandler import FailingTestsHandler
 # from cc.triplet_cc_identify.PassingTestsHandler import PassingTestsHandler
 from fl_evaluation.metrics.calc_corr import calc_corr
 from CONFIG import *
+from fl_evaluation.metrics.metrics2 import *
+from fl_evaluation.metrics.new_calc_corr import new_calc_corr
 from read_data.Defects4JDataLoader import Defects4JDataLoader
 
 
@@ -14,11 +16,11 @@ class Features:
 
     def __init__(self, data_df):
         self.data_df = data_df
-        self.suspicious_list = [calc_corr(self.data_df, "dstar"), calc_corr(self.data_df, "ochiai"),
-                                calc_corr(self.data_df, "barinel"), calc_corr(self.data_df, "ER1"),
-                                calc_corr(self.data_df, "ER5"), calc_corr(self.data_df, "GP02"),
-                                calc_corr(self.data_df, "GP03"), calc_corr(self.data_df, "GP19"),
-                                calc_corr(self.data_df, "Jaccard"), calc_corr(self.data_df, "Op2"), ]
+        self.suspicious_list = [ new_calc_corr(self.data_df, DStar()), new_calc_corr(self.data_df,Ochiai()),
+                                 new_calc_corr(self.data_df,Barinel()),new_calc_corr(self.data_df,ER1()),
+                                 new_calc_corr(self.data_df,ER5()), new_calc_corr(self.data_df,GP02()),
+                                 new_calc_corr(self.data_df,GP03()), new_calc_corr(self.data_df,GP19()),
+                                 new_calc_corr(self.data_df,Jaccard()),new_calc_corr(self.data_df,Op2())]
         self.features = self.data_df.iloc[:, :-1]
         self.passing_features = self.get_passing_tests(self.data_df).iloc[:, :-1]
         self.failing_features = FailingTestsHandler.get_failing_tests(self.data_df).iloc[:, :-1]
@@ -107,7 +109,7 @@ class Features:
 
 
 if __name__ == "__main__":
-    data = Defects4JDataLoader(os.path.join(project_dir, '..', 'data'), "Chart", "2")
+    data = Defects4JDataLoader(os.path.join(project_dir, '..', 'data'), "Chart", "1")
     data.load()
     features = Features(data.data_df)
     ssp = features.suspScore()

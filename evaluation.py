@@ -7,7 +7,7 @@ def calculate_metrics(true_positive, detected, ground_truth):
 
 
 # 文件路径
-file_path = 'new_results/2024-1-11-EFC-4/origin_record.txt'
+file_path = './new_results/Fusion_2025_2-26-cov/origin_record.txt'
 
 # 读取文件内容
 with open(file_path, 'r') as file:
@@ -47,4 +47,3 @@ for group, metric in metrics.items():
     print(f"Recall: {recall:.2f}")
     print(f"Precision: {precision:.2f}")
     print(f"F1 Score: {f1_score:.2f}")
-    print()

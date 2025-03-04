@@ -66,7 +66,7 @@ def run(program_list, start_program, start_program_id, identifyMethod, way, arg_
             # break
                 # pl.evaluation()
                 max_pl.calRes("trim")
-    parse(os.path.join(project_dir, "new_results", way), way+"_MFR.txt", "FL.xlsx")
+    parse(os.path.join(project_dir, "new_results", way), way+"_MFR.txt", "FL-1.xlsx")
     parse(os.path.join(project_dir, "new_results", way), "origin_record.txt", "precision_recall.xlsx")
 
 

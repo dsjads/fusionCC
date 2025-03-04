@@ -132,9 +132,13 @@ def u(p_e):
 
 def main():
     program_list = [
-        "Chart"
+        "Chart",
+        "Lang",
+        "Math",
+        "Mockito",
+        "Time"
     ]
-    run(program_list, "Chart", 1, Technique2CCPipeline, "2024-Tech-II", 1)
+    run(program_list, "Chart", 1, Technique2CCPipeline, "2024-5-15-Tech-II", 1)
 
 if __name__ == "__main__":
     main()

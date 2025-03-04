@@ -167,12 +167,12 @@ if __name__ == "__main__":
     # main()
     # task_complete("Tech-I end")
     program_list = [
-        # "Chart",
-        "Closure-2023-12-6-1",
-        # "Lang",
-        # "Math",
-        # "Mockito",
-        # "Time"
+        "Chart",
+        # "Closure-2023-12-6-1",
+        "Lang",
+        "Math",
+        "Mockito",
+        "Time"
     ]
     for program in program_list:
         for i in cc_info[program]:

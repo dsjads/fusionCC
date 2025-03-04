@@ -95,7 +95,7 @@ def main():
         "GP03",
         "GP19",
         "Op2"
-        # "MLP-FL",
+        # "Expert-FL",
         # "CNN-FL",
         # "RNN-FL"
     ]
