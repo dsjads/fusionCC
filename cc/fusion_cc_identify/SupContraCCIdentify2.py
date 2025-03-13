@@ -7,7 +7,7 @@ from cc.fusion_cc_identify.BaseIdentify import BaseIdentify
 from cc.fusion_cc_identify.FailingTestsHandler import FailingTestsHandler
 from cc.fusion_cc_identify.FeatureTestsHandler import FeatureTestsHandler
 from cc.fusion_cc_identify.PassingTestsHandler import PassingTestsHandler
-from cc.fusion_cc_model.CnnNet import Network, ExpertCNet
+from cc.fusion_cc_model.CnnNet import Network
 from cc.fusion_cc_model.ContraDataLoader import ContraDataLoader, TestsDataLoader
 import argparse
 
@@ -44,7 +44,7 @@ args = parser.parse_args()
 
 weight = 1
 
-class FusionIdentifyWithoutCovInfo(BaseIdentify):
+class SupContraCCIdentify2(BaseIdentify):
     def __init__(self, project_dir, configs, args_dict, way):
         super().__init__(project_dir, configs, args_dict, way)
         self.cost = 0
@@ -72,7 +72,7 @@ class FusionIdentifyWithoutCovInfo(BaseIdentify):
         # size = self.passing_tests.shape[0]
         size = self.train_tests.shape[0]
         indices = np.array(self.train_tests.index)
-        np.random.shuffle(indices)
+        # np.random.shuffle(indices)
 
         k = 5
         part_size = math.ceil(size / k)
@@ -86,7 +86,6 @@ class FusionIdentifyWithoutCovInfo(BaseIdentify):
             train_tests = self.passing_tests.iloc[train_index, :-1]
             # train_augmented_tests = self.augmentation_tests.iloc[train_index, :-1]
             train_target = self.cc_target[train_index]
-
             self.ssp, self.cr, self.sf = FeatureTestsHandler.get_feature_from_file(project_dir, self.program,
                                                                                    self.bug_id)
             ssp = self.ssp.iloc[train_index, :]
@@ -114,7 +113,7 @@ class FusionIdentifyWithoutCovInfo(BaseIdentify):
                 pin_memory=True,
             )
 
-            model = ExpertCNet()
+            model = Network()
             # criterion = SupConLoss()
             optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
             # optimizer = optim.Adam(encoder.parameters(), lr=args.lr)
@@ -128,6 +127,7 @@ class FusionIdentifyWithoutCovInfo(BaseIdentify):
                 loss_weights = loss_weights.cuda()
             # criterion = torch.nn.CrossEntropyLoss(weight=loss_weights)
             criterion = FocalLoss(gamma=5, weight=loss_weights)
+            # criterion = FocalLoss
             # criterion = torch.nn.MSELoss()
             for epoch in range(1, args.epochs):
                 self._train_ce(train_loader, model, criterion, optimizer, epoch)
@@ -149,7 +149,7 @@ class FusionIdentifyWithoutCovInfo(BaseIdentify):
                 target = target.repeat(2, 1)
                 ef = ef.repeat(2,1)
 
-            prob = model(ef)
+            prob = model(test,ef)
             loss = criterion(prob, target)
 
             optimizer.zero_grad()
@@ -218,6 +218,6 @@ class FusionIdentifyWithoutCovInfo(BaseIdentify):
 
                 ef = torch.hstack((ssp, cr, sf))
 
-                prob = model(ef)
+                prob = model(test, ef)
                 if prob[0][0] < prob[0][1]:
                     self.cc_index.iloc[item] = True

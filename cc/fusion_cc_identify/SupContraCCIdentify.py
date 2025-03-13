@@ -1,19 +1,18 @@
 import math
 import numpy as np
-import pandas as pd
 import torch
 from torch import optim
-from torch.nn import MSELoss
-import torch.nn.functional as F
 from CONFIG import *
 from cc.fusion_cc_identify.BaseIdentify import BaseIdentify
 from cc.fusion_cc_identify.FailingTestsHandler import FailingTestsHandler
+from cc.fusion_cc_identify.FeatureTestsHandler import FeatureTestsHandler
 from cc.fusion_cc_identify.PassingTestsHandler import PassingTestsHandler
-from cc.fusion_cc_model.ContraDataLoader import ContraDataLoader
+from cc.fusion_cc_model.CnnNet import Network
+from cc.fusion_cc_model.ContraDataLoader import ContraDataLoader, TestsDataLoader
 import argparse
-from cc.fusion_cc_model.FusionNet import FusionNet, CnnNet, SupCENet
-from cc.fusion_cc_model.SupConLoss import SupConLoss
 
+from cc.fusion_cc_model.FocalLoss import FocalLoss
+from cc.fusion_cc_model.FusionNet import FusionNet, CnnNet, SupCENet
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 # Training settings
@@ -54,31 +53,24 @@ class SupContraCCIdentify(BaseIdentify):
         if len(self.CCE) == 0:
             self.train_flag = False
             return
-        self.CCE.append("error")
-        new_data_df = self.data_df[self.CCE]
+        CCE = self.CCE[-1]
+        CCE.append("error")
+        new_data_df = self.data_df[CCE]
 
         self.failing_tests = FailingTestsHandler.get_failing_tests(new_data_df)
         self.passing_tests = PassingTestsHandler.get_passing_tests(new_data_df)
-
-        columns_with_ones = self.failing_tests.columns[(self.failing_tests == 1).any()]
-        augmented_data = pd.DataFrame(0, index=self.passing_tests.index, columns=self.passing_tests.columns)
-
-        # 将指定列的数据从 self.passing_tests 复制到 augmented_data 中
-        augmented_data[columns_with_ones] = self.passing_tests[columns_with_ones]
-        self.augmentation_tests = augmented_data
+        self.train_tests = self.passing_tests[self.passing_tests.sum(axis=1) != 0]
+        # 将指定列的数据从 self.passing_tests 复制到 augmented_data中
         target = self.ground_truth_cc_index.astype("int").values
-        # self.cc_target = torch.from_numpy(target.astype(np.float32)).unsqueeze(1)
         self.cc_target = torch.FloatTensor([[0, 1]] * len(target))
         for i in range(len(target)):
             if target[i] == 1:
                 self.cc_target[i] = torch.FloatTensor([0, 1])
             else:
                 self.cc_target[i] = torch.FloatTensor([1, 0])
-
-
-        size = self.passing_tests.shape[0]
-        # indices = np.arange(size)
-        indices = np.array(self.passing_tests.index)
+        # size = self.passing_tests.shape[0]
+        size = self.train_tests.shape[0]
+        indices = np.array(self.train_tests.index)
         # np.random.shuffle(indices)
 
         k = 5
@@ -90,16 +82,25 @@ class SupContraCCIdentify(BaseIdentify):
             test_index = indices[start:end]
             train_index = np.concatenate([indices[:start], indices[end:]])
             train_index = self.passing_tests.index.get_indexer(train_index)
-
             train_tests = self.passing_tests.iloc[train_index, :-1]
-            train_augmented_tests = self.augmentation_tests.iloc[train_index, :-1]
+            # train_augmented_tests = self.augmentation_tests.iloc[train_index, :-1]
             train_target = self.cc_target[train_index]
+
+            train_tests,train_target = self.data_augmentation(train_tests,train_target)
             test_index = self.passing_tests.index.get_indexer(test_index)
+            if len(train_index) == 0:
+                for item in test_index:
+                    self.cc_index.iloc[item] = True
+                return
+            self.ssp, self.cr, self.sf = FeatureTestsHandler.get_feature_from_file(project_dir, self.program,
+                                                                                   self.bug_id)
+            ssp_feature = self.ssp.iloc[train_index, :]
+            cr_feature = self.cr.iloc[train_index, :]
+            sf_feature = self.sf.iloc[train_index, :]
 
             train_loader = torch.utils.data.DataLoader(
-                ContraDataLoader(
+                TestsDataLoader(
                     tests=train_tests,
-                    augmentation= train_augmented_tests,
                     target=train_target,
                 ),
                 batch_size=min(args.batch_size, self.passing_tests.shape[0]),
@@ -108,31 +109,38 @@ class SupContraCCIdentify(BaseIdentify):
                 pin_memory=True
             )
 
-            encoder = CnnNet()
+            # encoder = CnnNet()
 
             # if args.cuda:
             #     encoder.cuda()
 
+            model = Network()
             # criterion = SupConLoss()
-            optimizer = optim.SGD(encoder.parameters(), lr=args.lr, momentum=args.momentum)
+            optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
             # optimizer = optim.Adam(encoder.parameters(), lr=args.lr)
             # for epoch in range(1, args.epochs):
             #     self._train_feat(train_loader, encoder, criterion, optimizer, epoch)
-            model = SupCENet(64, encoder)
+            # model = SupCENet(64, encoder)
             if args.cuda:
                 model.cuda()
-            criterion = torch.nn.MSELoss()
+            loss_weights = torch.tensor([0.25, 0.75])
+            if args.cuda:
+                loss_weights = loss_weights.cuda()
+            # criterion = torch.nn.CrossEntropyLoss(weight=loss_weights)
+            criterion = FocalLoss(gamma=5, weight=loss_weights)
+            # criterion = FocalLoss
+            # criterion = torch.nn.MSELoss()
             for epoch in range(1, args.epochs):
                 self._train_ce(train_loader, model, criterion, optimizer, epoch)
             self._test(model, test_index)
 
     def _train_ce(self, train_loader, model, criterion, optimizer, epoch):
         model.train()
-        for batch_idx, (test, aug_test, target) in enumerate(train_loader):
+        for batch_idx, (test, target) in enumerate(train_loader):
             if args.cuda:
-                test, aug_test, target = test.cuda(), aug_test.cuda(), target.cuda()
+                test, target = test.cuda(), target.cuda()
             test = test.to(torch.float)
-            aug_test = aug_test.to(torch.float)
+            # aug_test = aug_test.to(torch.float)
             if test.size(0) == 1:
                 test = test.repeat(2, 1)
                 target = target.repeat(2, 1)

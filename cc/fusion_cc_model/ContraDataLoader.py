@@ -12,3 +12,13 @@ class ContraDataLoader(data.Dataset):
 
     def __len__(self):
         return self.target.shape[0]
+
+class TestsDataLoader(data.Dataset):
+    def __init__(self, tests, target):
+        self.tests = np.array(tests)
+        self.target = np.array(target)
+    def __getitem__(self, item):
+        return self.tests[item], self.target[item]
+
+    def __len__(self):
+        return self.target.shape[0]

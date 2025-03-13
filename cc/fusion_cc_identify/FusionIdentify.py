@@ -14,7 +14,7 @@ from cc.fusion_cc_model.EFCDataLoader import CombinedInfoLoader
 import argparse
 
 from cc.fusion_cc_model.FocalLoss import FocalLoss
-from cc.fusion_cc_model.FusionNet import FusionNet
+from cc.fusion_cc_model.FusionNet import FusionNet, ExpertNet2
 from cc.fusion_cc_model.FusionNetConcat import FusionNetConcat
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -58,8 +58,9 @@ class FusionIdentify(BaseIdentify):
         if len(self.CCE) == 0:
             self.train_flag = False
             return
-        self.CCE.append("error")
-        new_data_df = self.data_df[self.CCE]
+        CCE = self.CCE[-1]
+        CCE.append("error")
+        new_data_df = self.data_df[CCE]
 
         self.failing_tests = FailingTestsHandler.get_failing_tests(new_data_df)
         self.passing_tests = PassingTestsHandler.get_passing_tests(new_data_df)
@@ -75,7 +76,7 @@ class FusionIdentify(BaseIdentify):
         size = self.train_tests.shape[0]
         # indices = np.arange(size)
         indices = np.array(self.train_tests.index)
-        np.random.shuffle(indices)
+        # np.random.shuffle(indices)
 
         k = 5
         part_size = math.ceil(size / k)
@@ -86,7 +87,6 @@ class FusionIdentify(BaseIdentify):
             end = (i + 1) * part_size if i < k - 1 else size
             test_index = indices[start:end]
             train_index = np.concatenate([indices[:start], indices[end:]])
-            # train_tests = self.passing_tests.loc[train_index,:-1]
             train_index = self.passing_tests.index.get_indexer(train_index)
             train_tests = self.passing_tests.iloc[train_index, :-1]
             train_target = self.cc_target[train_index]
@@ -115,7 +115,8 @@ class FusionIdentify(BaseIdentify):
             )
 
             elements_length = len(self.CCE) - 1
-            model = FusionNetConcat(elements_length)
+            model = ExpertNet2(30)
+            # model = FusionNetConcat(elements_length)
 
             if args.cuda:
                 model.cuda()
@@ -148,11 +149,9 @@ class FusionIdentify(BaseIdentify):
                 expert_feature = expert_feature.repeat(2, 1)
                 target = target.repeat(2, 1)
 
-            prob = model(tests, expert_feature)
+            # prob = model(tests, expert_feature)
 
-            if args.cuda:
-                target = target.cuda()
-
+            prob = model(expert_feature)
             loss = criterion(prob, target)
 
             optimizer.zero_grad()
@@ -190,7 +189,8 @@ class FusionIdentify(BaseIdentify):
 
                 expert_feature = torch.hstack((ssp, cr, sf))
 
-                prob = model(test, expert_feature)
+                # prob = model(test, expert_feature)
+                prob = model(expert_feature)
 
                 if prob[0][0] < prob[0][1]:
                     self.cc_index.iloc[item] = True
