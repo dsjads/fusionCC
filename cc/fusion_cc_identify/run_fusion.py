@@ -24,7 +24,7 @@ def main():
         "select_ratio": [i / 100 for i in range(5, 31, 5)],
         "sus_threshold": [i / 100 for i in range(50, 91, 5)]
     }
-    name = "2025_3-13-fusion"
+    name = "2025_3-13-fusion-withoutCBAM"
     run(program_list, "Chart", 1 , SupContraCCIdentify2 , name, arg_dict)
 
 

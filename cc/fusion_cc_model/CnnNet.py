@@ -60,7 +60,7 @@ class Network(nn.Module):
     def forward(self, x, ef):
         x = self.encoder(x)
         ef = self.expert_net(ef)
-        x = self.cbam(x)
+        # x = self.cbam(x)
         x = torch.flatten(self.pool(x), 1)
         feats = [x, ef]
         x = self.fusion(feats)
