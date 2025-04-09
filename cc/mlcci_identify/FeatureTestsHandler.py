@@ -2,7 +2,6 @@ import os
 
 import numpy as np
 import pandas as pd
-
 from sklearn.preprocessing import StandardScaler
 
 
@@ -12,17 +11,13 @@ class FeatureTestsHandler:
 
     @staticmethod
     def get_feature_from_file(project_dir, program, bug_id):
-        # save_path = os.path.join(project_dir, "feature", "MLCCI", f"{program}-csv")
-        save_path = os.path.join(project_dir, "feature", "Expert", f"{program}-passing-csv-1")
+        save_path = os.path.join(project_dir, "feature", "MLCCI", f"{program}-csv")
+        # save_path = os.path.join(project_dir, "feature", "Expert", f"{program}-passing-csv-1")
         file_path = f"{save_path}/features-{program}-{bug_id}.csv"
-
         feature_matrix = pd.read_csv(file_path, index_col=0)
-
-        # loaded_matrix = np.load(file_path)
-        ssp = feature_matrix.iloc[:, 0:10]
-        cr = feature_matrix.iloc[:, 10:20]
-        sf = feature_matrix.iloc[:, 20:30]
-
+        ssp = feature_matrix.iloc[:, 0:20]
+        cr = feature_matrix.iloc[:, 20:40]
+        sf = feature_matrix.iloc[:, 40:60]
         ssp_array = ssp.to_numpy()
         cr_array = cr.to_numpy()
         sf_array = sf.to_numpy()
@@ -37,10 +32,14 @@ class FeatureTestsHandler:
         cr_standard = standardScaler2.transform(cr_array)
         sf_standard = standardScaler3.transform(sf_array)
 
-        ssp = pd.DataFrame(ssp_standard, index=ssp.index)
-        sf = pd.DataFrame(sf_standard, index=sf.index)
-        cr = pd.DataFrame(cr_standard, index=cr.index)
-        return ssp, cr, sf
+        return np.hstack((ssp_standard, cr_standard, sf_standard))
+
+    @staticmethod
+    def standard(features):
+        standardScaler = StandardScaler()
+        standardScaler.fit(features)
+        features_standard = standardScaler.transform(features)
+        return features_standard
 
     @staticmethod
     def get_sus_data_from_file(project_dir,program,bug_id):

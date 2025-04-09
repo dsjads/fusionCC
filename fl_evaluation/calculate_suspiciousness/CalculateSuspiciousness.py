@@ -26,7 +26,7 @@ class CalculateSuspiciousness():
         self.suspicious_list = calc_corr(self.data_obj.data_df, method)
         for col in self.data_obj.rest_columns:
             self.suspicious_list[col] = 0
-        # write_corr_to_txt(method, self.suspicious_list, self.data_obj.file_dir, self.state)
+        write_corr_to_txt(method, self.suspicious_list, self.data_obj.file_dir, self.state)
         # write_corr_to_txt(method, self.suspicious_list, self.save_rank_path, self.state)
 
     def _calculate_rank(self):

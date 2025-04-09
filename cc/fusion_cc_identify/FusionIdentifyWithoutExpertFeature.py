@@ -7,13 +7,15 @@ from cc.fusion_cc_identify.BaseIdentify import BaseIdentify
 from cc.fusion_cc_identify.FailingTestsHandler import FailingTestsHandler
 from cc.fusion_cc_identify.FeatureTestsHandler import FeatureTestsHandler
 from cc.fusion_cc_identify.PassingTestsHandler import PassingTestsHandler
-from cc.fusion_cc_model.CnnNet import Network, CovNetwork
+from cc.fusion_cc_model.FusionNet import Network
 from cc.fusion_cc_model.ContraDataLoader import ContraDataLoader, TestsDataLoader
 import argparse
 
 from cc.fusion_cc_model.EFCDataLoader import CombinedInfoLoader
 from cc.fusion_cc_model.FocalLoss import FocalLoss
-from cc.fusion_cc_model.FusionNet import FusionNet, CnnNet, SupCENet
+from cc.fusion_cc_model.multi_scale_ori import MSResNet
+from cc.fusion_cc_model.other_models import BiLSTMNet, CnnNet, MlpNet
+
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 # Training settings
@@ -110,7 +112,10 @@ class FusionIdentifyWithoutExpertFeature(BaseIdentify):
                 pin_memory=True,
             )
 
-            model = CovNetwork()
+            model = MSResNet()
+            elements_length = len(self.CCE[-1]) - 1
+            # model = CnnNet(elements_length)
+            # model = MlpNet(elements_length)
             optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 
             if args.cuda:
@@ -119,7 +124,8 @@ class FusionIdentifyWithoutExpertFeature(BaseIdentify):
             if args.cuda:
                 loss_weights = loss_weights.cuda()
             # criterion = torch.nn.CrossEntropyLoss(weight=loss_weights)
-            criterion = FocalLoss(gamma=5, weight=loss_weights)
+            criterion = FocalLoss(weight=loss_weights)
+
             for epoch in range(1, args.epochs):
                 self._train_ce(train_loader, model, criterion, optimizer, epoch)
             self._test(model, test_index)
@@ -141,6 +147,7 @@ class FusionIdentifyWithoutExpertFeature(BaseIdentify):
                 ef = ef.repeat(2,1)
 
             prob = model(test)
+
             loss = criterion(prob, target)
 
             optimizer.zero_grad()
@@ -208,7 +215,7 @@ class FusionIdentifyWithoutExpertFeature(BaseIdentify):
                 sf = torch.unsqueeze(sf.to(torch.float), dim=0)
 
                 ef = torch.hstack((ssp, cr, sf))
-
                 prob = model(test)
+                prob = torch.softmax(prob, dim=1)
                 if prob[0][0] < prob[0][1]:
                     self.cc_index.iloc[item] = True

@@ -25,10 +25,7 @@ def get_N_para(feature, label):
 class DStar(CommonStrategy):
     def calculate(self, feature, label):
         Ncf, Nuf, Ncs, Nus = get_N_para(feature, label)
-        if Ncs + Nuf ==0 :
-            return 0
-        else:
-            return Ncf ** 2 / (Ncs + Nuf)
+        return Ncf ** 2 / (Ncs + Nuf)
 
 
 class DStarSub1(CommonStrategy):
@@ -42,10 +39,7 @@ class Ochiai(CommonStrategy):
         Ncf, Nuf, Ncs, Nus = get_N_para(feature, label)
         div = (Ncf + Nuf) * (Ncf + Ncs)
         div = 0 if div < 0 else div
-        if div == 0:
-            return 0
-        else:
-            return Ncf / np.sqrt(div)
+        return Ncf / np.sqrt(div)
 
 
 
@@ -58,10 +52,7 @@ class OchiaiSubOne(CommonStrategy):
 class OchiaiSubTwo(CommonStrategy):
     def calculate(self, feature, label):
         Ncf, Nuf, Ncs, Nus = get_N_para(feature, label)
-        if Ncf + Ncs:
-            return 0
-        else:
-            return 1 / np.sqrt(Ncf + Ncs)
+        return 1 / np.sqrt(Ncf + Ncs)
 
 
 class Barinel(CommonStrategy):
@@ -253,6 +244,15 @@ class Op2_sub_two(CommonStrategy):
         Ncf, Nuf, Ncs, Nus = get_N_para(feature, label)
         return 1 / (Ncs + Nus + 1)
 
+class Russell(CommonStrategy):
+    def calculate(self, feature, label):
+        Ncf, Nuf, Ncs, Nus = get_N_para(feature, label)
+        return Ncf / (Ncs + Nus + Nus +Nuf)
+
+class Russell_sub_one(CommonStrategy):
+    def calculate(self, feature, label):
+        Ncf, Nuf, Ncs, Nus = get_N_para(feature, label)
+        return 1 / (Ncs + Nus + Nus +Nuf)
 
 
 

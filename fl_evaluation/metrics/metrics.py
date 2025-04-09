@@ -40,8 +40,6 @@ def dstar(feature, label):
 def dstar_sub_one(feature, label):
     Ncf, Nuf, Ncs, Nus = get_N_para(feature, label)
     return 1 / (Ncs + Nuf)
-# Dstar, star is assigned to 2
-
 
 
 # Ochiai

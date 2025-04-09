@@ -1,5 +1,9 @@
+from contextlib import nullcontext
+from multiprocessing import Pool
+
 import numpy as np
 import pandas as pd
+
 
 from CONFIG import *
 from Features import Features
@@ -39,6 +43,50 @@ def _getpT(data):
     pT = cover / (uncover + cover)
     return pT
 
+def run2(program_list, start_program, start_program_id):
+    save_path = os.path.join(project_dir, "feature")
+    if not os.path.exists(save_path):
+        os.mkdir(save_path)
+    flag = False
+    pool = Pool(processes=8)
+    for program in program_list:
+        for i in cc_info[program]:
+            if program == start_program and i == start_program_id:
+                flag = True
+            if flag:
+                pool.apply_async(featureExtract, (save_path, program, i), error_callback=error_callback)
+    pool.close()
+    pool.join()
+    print("Finished")
+
+
+def error_callback(error):
+    print(f"Error info: {error}")
+
+def featureExtract(save_path, program, index):
+    print(f"program {program}-{index} is processing")
+    data = Defects4JDataLoader(os.path.join(project_dir, '..', 'data'), program, index)
+    data.load()
+    CCE = find_CCE(data.data_df, 1)
+    CCE.append("error")
+    new_data_df = data.data_df[CCE]
+    # new_data_df = data.data_df
+    features = Features(new_data_df)
+    ssp = features.suspScore()
+    cr = features.covRatio()
+    sf = features.similarityFactor()
+    merged_matrix = np.concatenate((ssp, cr, sf), axis=1)
+
+    passing_data_df = new_data_df[new_data_df["error"] == 0]
+    df = pd.DataFrame(merged_matrix, index=passing_data_df.index)
+
+    npy_file_path = f"{save_path}/MLCCI/{program}/features-{program}-{index}.npy"
+    df_file_path = f"{save_path}/MLCCI/{program}-csv/features-{program}-{index}.csv"
+
+    np.save(npy_file_path, merged_matrix)
+    df.to_csv(df_file_path, index=True)
+    print("successfully save:", npy_file_path)
+
 
 def run(program_list, start_program, start_program_id, cita):
     save_path = os.path.join(project_dir, "feature")
@@ -56,7 +104,7 @@ def run(program_list, start_program, start_program_id, cita):
                 CCE = find_CCE(data.data_df, cita)
                 CCE.append("error")
                 new_data_df = data.data_df[CCE]
-
+                # new_data_df = data.data_df
                 # features = Features(data.data_df)
 
                 features = Features(new_data_df)
@@ -71,8 +119,8 @@ def run(program_list, start_program, start_program_id, cita):
                 passing_data_df = new_data_df[new_data_df["error"] == 0]
                 df = pd.DataFrame(merged_matrix, index=passing_data_df.index)
 
-                npy_file_path = f"{save_path}/Expert/{program}-{cita}/features-{program}-{i}.npy"
-                df_file_path = f"{save_path}/Expert/{program}-passing-csv-{cita}/features-{program}-{i}.csv"
+                npy_file_path = f"{save_path}/MLCCI/{program}-{cita}/features-{program}-{i}.npy"
+                df_file_path = f"{save_path}/MLCCI/{program}-passing-csv-{cita}/features-{program}-{i}.csv"
 
                 np.save(npy_file_path, merged_matrix)
                 df.to_csv(df_file_path, index=True)
@@ -81,9 +129,13 @@ def run(program_list, start_program, start_program_id, cita):
 
 def main():
     program_list = [
-        "Closure"
+        "Chart",
+        "Lang",
+        "Math",
+        "Mockito",
+        "Time"
     ]
-    run(program_list, "Closure", 2, 1)
+    run2(program_list, "Chart", 1)
 
 
 if __name__ == "__main__":

@@ -20,12 +20,11 @@ def run(program_list, start_program, start_program_id, identifyMethod, way, n):
                 pl = identifyMethod(project_dir, configs, n, way)
                 pl.find_cc_index()
                 time_ = dict()
-                # time_["time"] = pl.cost
                 save_path = os.path.join(project_dir, "new_results", way, "time.txt")
                 write_rank_to_txt(time_, save_path, program, i)
                 pl.evaluation()
-                # pl.calRes("trim")
-                # pl.calRes("relabel")
+                pl.calRes("trim")
+                pl.calRes("relabel")
 
     # parse(os.path.join(project_dir, "new_results", way), "origin_record.txt", "precision_recall.xlsx")
     for operation in ["trim", "relabel"]:

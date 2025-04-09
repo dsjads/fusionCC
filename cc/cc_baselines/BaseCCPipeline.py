@@ -51,7 +51,8 @@ class BaseCCPipeline(CCGroundTruthPipeline):
         passing_df = data_df[data_df["error"] == 0]
 
         if operation == "relabel":
-            passing_df["error"][self.cc_index] = 1
+            passing_df.loc[self.cc_index, "error"] = 1
+            # passing_df["error"][self.cc_index] = 1
         if operation == "trim":
             passing_df = passing_df[self.cc_index == False]
 
