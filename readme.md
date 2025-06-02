@@ -1,3 +1,5 @@
+![](./figures/cc-overview.png)
+
 ## Quick Start
 ### Requirements
 - Python Package:
@@ -15,22 +17,20 @@
 ### Empirical Study
 The scripts below are running with our hand-made data Chart-0 for a quick start.
 The full Defects4J coverage data can be found at https://bitbucket.org/rjust/fault-localization-data/src/master/
-#### RQ1
+
+
+
+### RQ1 & RQ2
 - Run the scripts in `./cc/cc_baselines`
-
+Run the script in `./cc/fusion_cc_identify/run_fusion.py`
 The output can be found under folder `./results/`
 
-#### RQ2
-- Run the scripts in `./cc/survey_pipeline`
-- 
-The output can be found under folder `./results/`
+#### RQ3
+- Run the script: `./cc/fusion_cc_identify/run_fusion.py`
+The output can be found under folder `./results/the_appraoch-trim` and `./results/the_appraoch-relabel`
 
-### Evaluation
-
-#### RQ3 & RQ4
-- Run the script: `./cc/triplet_cc_identify/run_triplet.py`
-
-The output can be found under folder `./results/`
+#### RQ4
+The output can be found under folder `./results/the_appraoch/time.txt`
 
 Eample output:
 
@@ -49,7 +49,7 @@ Eample output:
 
 ## Project Structure
 ```
-merit
+fusionCC
 ├── CONFIG.py
 ├── requirements.txt
 ├── cc
@@ -60,13 +60,13 @@ merit
 │   ├── cc_baselines        # baselines
 │   ├── cc_evaluation       # evaluation metrics of CCT detection
 │   ├── core.py
-│   ├── survey_pipeline     # RQ1 and RQ2
-│   ├── triplenet_model     # model
-│   └── triplet_cc_identify 
+│   ├── survey_pipeline
+│   ├── fuion_cc_model     # model
+│   └── fusion_cc_identify 
 │       ├── ...
-│       └── run_triplet.py  # entry
+│       └── run_fusion.py  # entry
 ├── data            # (hand-made) example data 
-├── fl_evaluation   # the suspicious evaluation of AFL
+├── fl_evaluation   # the suspicious evaluation of FL
 ├── read_data       # read data
 ├── results         # results 
 └── utils           
