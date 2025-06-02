@@ -1,3 +1,7 @@
+# FusionCC
+
+## Enhanced Feature Representation via Hybrid Feature Fusion for Coincidental Correctness Detection
+
 ![](./figures/cc-overview.png)
 
 ## Quick Start
