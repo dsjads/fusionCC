@@ -38,9 +38,9 @@ class BaseCCPipeline(CCGroundTruthPipeline):
             return
         else:
             original_record, record = Evaluation.evaluation(self.ground_truth_cc_index, self.cc_index)
-            original_record_path = os.path.join(self.project_dir, "new_results", self.way, "origin_record.txt")
+            original_record_path = os.path.join(self.project_dir, "results", self.way, "origin_record.txt")
             write_rank_to_txt(original_record, original_record_path, self.program, self.bug_id)
-            record_path = os.path.join(self.project_dir, "new_results", self.way, "record.txt")
+            record_path = os.path.join(self.project_dir, "results", self.way, "record.txt")
             write_rank_to_txt(record, record_path, self.program, self.bug_id)
 
     def calRes(self, operation):
@@ -51,8 +51,8 @@ class BaseCCPipeline(CCGroundTruthPipeline):
         passing_df = data_df[data_df["error"] == 0]
 
         if operation == "relabel":
-            passing_df.loc[self.cc_index, "error"] = 1
-            # passing_df["error"][self.cc_index] = 1
+            # passing_df.loc[self.cc_index, "error"] = 1
+            passing_df["error"][self.cc_index] = 1
         if operation == "trim":
             passing_df = passing_df[self.cc_index == False]
 
@@ -62,7 +62,7 @@ class BaseCCPipeline(CCGroundTruthPipeline):
 
         op_way = self.way+"-"+operation
         # op_way = self.way
-        save_rank_path = os.path.join(self.project_dir, "new_results", op_way)
+        save_rank_path = os.path.join(self.project_dir, "results", op_way)
         cc = CalculateSuspiciousness(self.data_obj, self.method, save_rank_path, op_way)
         cc.run()
 

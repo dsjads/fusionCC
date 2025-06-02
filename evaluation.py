@@ -7,7 +7,7 @@ def calculate_metrics(true_positive, detected, ground_truth):
 
 
 # 文件路径
-file_path = './new_results/MLCCI/origin_record.txt'
+file_path = 'results/2025-1-4-CNN-9-9/origin_record.txt'
 
 # 读取文件内容
 with open(file_path, 'r') as file:

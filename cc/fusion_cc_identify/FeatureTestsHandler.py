@@ -13,7 +13,7 @@ class FeatureTestsHandler:
     @staticmethod
     def get_feature_from_file(project_dir, program, bug_id):
         # save_path = os.path.join(project_dir, "feature", "MLCCI", f"{program}-csv")
-        save_path = os.path.join(project_dir, "feature", "Expert", f"{program}-passing-csv-1")
+        save_path = os.path.join(project_dir, "feature", "Ours", f"{program}-csv")
         file_path = f"{save_path}/features-{program}-{bug_id}.csv"
 
         feature_matrix = pd.read_csv(file_path, index_col=0)

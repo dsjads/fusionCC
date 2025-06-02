@@ -55,6 +55,7 @@ def run2(program_list, start_program, start_program_id):
                 flag = True
             if flag:
                 pool.apply_async(featureExtract, (save_path, program, i), error_callback=error_callback)
+                # featureExtract(save_path, program, i)
     pool.close()
     pool.join()
     print("Finished")
@@ -67,25 +68,22 @@ def featureExtract(save_path, program, index):
     print(f"program {program}-{index} is processing")
     data = Defects4JDataLoader(os.path.join(project_dir, '..', 'data'), program, index)
     data.load()
-    CCE = find_CCE(data.data_df, 1)
-    CCE.append("error")
-    new_data_df = data.data_df[CCE]
-    # new_data_df = data.data_df
+    # CCE = find_CCE(data.data_df, 1)
+    # CCE.append("error")
+    # new_data_df = data.data_df[CCE]
+    new_data_df = data.data_df
     features = Features(new_data_df)
     ssp = features.suspScore()
     cr = features.covRatio()
     sf = features.similarityFactor()
     merged_matrix = np.concatenate((ssp, cr, sf), axis=1)
-
     passing_data_df = new_data_df[new_data_df["error"] == 0]
     df = pd.DataFrame(merged_matrix, index=passing_data_df.index)
-
-    npy_file_path = f"{save_path}/MLCCI/{program}/features-{program}-{index}.npy"
-    df_file_path = f"{save_path}/MLCCI/{program}-csv/features-{program}-{index}.csv"
-
-    np.save(npy_file_path, merged_matrix)
+    # npy_file_path = f"{save_path}/MLCCI/{program}-{cita}/features-{program}-{i}.npy"
+    df_file_path = f"{save_path}/MLCCI2/{program}-csv/features-{program}-{index}.csv"
+    # np.save(npy_file_path, merged_matrix)
     df.to_csv(df_file_path, index=True)
-    print("successfully save:", npy_file_path)
+    print("successfully save:", df_file_path)
 
 
 def run(program_list, start_program, start_program_id, cita):
@@ -119,12 +117,12 @@ def run(program_list, start_program, start_program_id, cita):
                 passing_data_df = new_data_df[new_data_df["error"] == 0]
                 df = pd.DataFrame(merged_matrix, index=passing_data_df.index)
 
-                npy_file_path = f"{save_path}/MLCCI/{program}-{cita}/features-{program}-{i}.npy"
-                df_file_path = f"{save_path}/MLCCI/{program}-passing-csv-{cita}/features-{program}-{i}.csv"
+                # npy_file_path = f"{save_path}/MLCCI/{program}-{cita}/features-{program}-{i}.npy"
+                df_file_path = f"{save_path}/Expert/{program}-csv/features-{program}-{i}.csv"
 
-                np.save(npy_file_path, merged_matrix)
+                # np.save(npy_file_path, merged_matrix)
                 df.to_csv(df_file_path, index=True)
-                print("successfully save:", npy_file_path)
+                print("successfully save:", df_file_path)
 
 
 def main():
@@ -134,6 +132,7 @@ def main():
         "Math",
         "Mockito",
         "Time"
+        # "Closure"
     ]
     run2(program_list, "Chart", 1)
 

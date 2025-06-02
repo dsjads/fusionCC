@@ -1,3 +1,5 @@
+import multiprocessing
+
 import numpy as np
 import pandas as pd
 import torch
@@ -128,18 +130,34 @@ class BaseIdentify(BaseCCPipeline):
         return train_tests, train_target
 
     def data_augmentation_with_ef(self, train_tests, train_target, ssp, cr, sf):
-        # resampling
+        # 提前计算索引
         indices = (train_target == torch.tensor([0, 1], dtype=torch.float32)).all(dim=1)
+        index_np = indices.numpy()
         sub_train_target = train_target[indices]
-        sub_ssp, sub_cr, sub_sf = ssp[indices.numpy()], cr[indices.numpy()], sf[indices.numpy()]
-        sub_train_tests = train_tests[indices.numpy()]
+        sub_ssp, sub_cr, sub_sf = ssp[index_np], cr[index_np], sf[index_np]
+        sub_train_tests = train_tests[index_np]
+
+        # 存储待拼接的数据
+        train_tests_list = [train_tests]
+        train_target_list = [train_target]
+        ssp_list = [ssp]
+        cr_list = [cr]
+        sf_list = [sf]
+
         for CCE in self.CCE[:-1]:
             new_sub_train_tests = sub_train_tests.copy()
             columns_to_zero = [col for col in sub_train_tests.columns if col not in CCE]
             new_sub_train_tests[columns_to_zero] = 0
-            train_tests = pd.concat([train_tests, new_sub_train_tests], ignore_index=True)
-            train_target = torch.cat((train_target, sub_train_target), dim=0)
-            ssp = pd.concat([ssp, sub_ssp],ignore_index=True)
-            cr = pd.concat([cr, sub_cr],ignore_index=True)
-            sf = pd.concat([sf,sub_sf],ignore_index=True)
+
+            train_tests_list.append(new_sub_train_tests)
+            train_target_list.append(sub_train_target)
+            ssp_list.append(sub_ssp)
+            cr_list.append(sub_cr)
+            sf_list.append(sub_sf)
+        # 一次性拼接所有数据
+        train_tests = pd.concat(train_tests_list, ignore_index=True)
+        train_target = torch.cat(train_target_list, dim=0)
+        ssp = pd.concat(ssp_list, ignore_index=True)
+        cr = pd.concat(cr_list, ignore_index=True)
+        sf = pd.concat(sf_list, ignore_index=True)
         return train_tests, train_target, ssp, cr, sf

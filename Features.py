@@ -14,11 +14,11 @@ class Features:
 
     def __init__(self, data_df):
         self.data_df = data_df
-        # self.suspicious_list = [ new_calc_corr(self.data_df, DStar()), new_calc_corr(self.data_df,Ochiai()),
-        #                          new_calc_corr(self.data_df,Barinel()),new_calc_corr(self.data_df,ER1()),
-        #                          new_calc_corr(self.data_df,ER5()), new_calc_corr(self.data_df,GP02()),
-        #                          new_calc_corr(self.data_df,GP03()), new_calc_corr(self.data_df,GP19()),
-        #                          new_calc_corr(self.data_df,Jaccard()),new_calc_corr(self.data_df,Op2())]
+        self.suspicious_list = [ new_calc_corr(self.data_df, DStar()), new_calc_corr(self.data_df,Ochiai()),
+                                 new_calc_corr(self.data_df,Barinel()),new_calc_corr(self.data_df,ER1()),
+                                 new_calc_corr(self.data_df,ER5()), new_calc_corr(self.data_df,GP02()),
+                                 new_calc_corr(self.data_df,GP03()), new_calc_corr(self.data_df,GP19()),
+                                 new_calc_corr(self.data_df,Jaccard()),new_calc_corr(self.data_df,Op2())]
         # self.suspicious_list = [
         #     new_calc_corr(self.data_df, Ochiai()),
         # ]

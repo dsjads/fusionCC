@@ -20,7 +20,9 @@ def run(program_list, start_program, start_program_id, identifyMethod, way, n):
                 pl = identifyMethod(project_dir, configs, n, way)
                 pl.find_cc_index()
                 time_ = dict()
-                save_path = os.path.join(project_dir, "new_results", way, "time.txt")
+                # time_["train_cost"] = pl.train_cost
+                # time_["infer_cost"] = pl.infer_cost
+                save_path = os.path.join(project_dir, "results", way, "time.txt")
                 write_rank_to_txt(time_, save_path, program, i)
                 pl.evaluation()
                 pl.calRes("trim")

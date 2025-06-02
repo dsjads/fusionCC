@@ -1,7 +1,8 @@
+from CONFIG import program_list
 from cc.core import run
 from cc.fusion_cc_identify.BaseIdentify import BaseIdentify
-from cc.fusion_cc_identify.FusionIdentifyWithoutCovInfo import FusionIdentifyWithoutCovInfo
-from cc.fusion_cc_identify.FusionIdentifyWithoutExpertFeature import FusionIdentifyWithoutExpertFeature
+from cc.fusion_cc_identify.FusionIdentifyWithoutCov import FusionIdentifyWithoutCovInfo
+from cc.fusion_cc_identify.FusionIdentifyWithoutHF import FusionIdentifyWithoutExpertFeature
 from cc.fusion_cc_identify.FusionIdentify import FusionIdentify
 
 
@@ -14,7 +15,8 @@ def main():
     # "Time"
     # ]
     # program_list = ["Chart"]
-    program_list = ["Chart", "Lang", "Math", "Mockito", "Time"]
+    program_list = ["Chart", "Lang", "Math", "Mockito", "Time", "Closure"]
+    # program_list = ["Closure"]
 
     arg_dict = {
         # "cce_threshold":[i/100 for i in range(60, 91, 5)],
@@ -22,8 +24,8 @@ def main():
         "select_ratio": [i / 100 for i in range(5, 31, 5)],
         "sus_threshold": [i / 100 for i in range(50, 91, 5)]
     }
-    name = "2025-1-6-ms"
-    run(program_list, "Chart", 1, FusionIdentify, name, arg_dict)
+    name = "2025-1-1"
+    run(program_list, "Chart", 1 , FusionIdentify, name, arg_dict)
 
 
 if __name__ == "__main__":

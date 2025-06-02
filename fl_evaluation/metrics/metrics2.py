@@ -69,6 +69,10 @@ class ER1(CommonStrategy):
         Ncf, Nuf, Ncs, Nus = get_N_para(feature, label)
         return Ncf - Ncs / (Ncs + Nus + 1)
 
+class ER1(CommonStrategy):
+    def calculate(self, feature, label):
+        Ncf, Nuf, Ncs, Nus = get_N_para(feature, label)
+        return Ncf - Ncs / (Ncs + Nus + 1)
 
 class ER2(CommonStrategy):
     def calculate(self, feature, label):
@@ -226,6 +230,11 @@ class GP19(CommonStrategy):
     def calculate(self, feature, label):
         Ncf, Nuf, Ncs, Nus = get_N_para(feature, label)
         return Ncf * np.sqrt(np.abs(Ncs - Ncf + Nuf - Nus))
+
+class ER1(CommonStrategy):
+    def calculate(self, feature, label):
+        Ncf, Nuf, Ncs, Nus = get_N_para(feature, label)
+        return Ncf - Ncs / (Ncs + Nus + 1)
 
 class Op2(CommonStrategy):
     def calculate(self, feature, label):

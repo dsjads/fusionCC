@@ -1,3 +1,4 @@
+import time
 import math
 import numpy as np
 import torch
@@ -7,12 +8,12 @@ from cc.fusion_cc_identify.BaseIdentify import BaseIdentify
 from cc.fusion_cc_identify.FailingTestsHandler import FailingTestsHandler
 from cc.fusion_cc_identify.FeatureTestsHandler import FeatureTestsHandler
 from cc.fusion_cc_identify.PassingTestsHandler import PassingTestsHandler
-from cc.fusion_cc_model.FusionNet import Network, MsWithEfCovNet
 from cc.fusion_cc_model.ContraDataLoader import ContraDataLoader, TestsDataLoader
 import argparse
 
 from cc.fusion_cc_model.EFCDataLoader import CombinedInfoLoader
-from cc.fusion_cc_model.multi_scale_ori import MSFusionNet
+from cc.fusion_cc_model.FocalLoss import FocalLoss
+from cc.fusion_cc_model.model import MSFusionNet
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
@@ -48,7 +49,8 @@ weight = 1
 class FusionIdentify(BaseIdentify):
     def __init__(self, project_dir, configs, args_dict, way):
         super().__init__(project_dir, configs, args_dict, way)
-        self.cost = 0
+        self.infer_cost = 0
+        self.train_cost = 0
 
     def _find_cc_index(self):
         self._find_CCE()
@@ -70,7 +72,6 @@ class FusionIdentify(BaseIdentify):
                 self.cc_target[i] = torch.FloatTensor([0, 1])
             else:
                 self.cc_target[i] = torch.FloatTensor([1, 0])
-        # size = self.passing_tests.shape[0]
         size = self.train_tests.shape[0]
         indices = np.array(self.train_tests.index)
         # np.random.shuffle(indices)
@@ -85,7 +86,6 @@ class FusionIdentify(BaseIdentify):
             train_index = np.concatenate([indices[:start], indices[end:]])
             train_index = self.passing_tests.index.get_indexer(train_index)
             train_tests = self.passing_tests.iloc[train_index, :-1]
-            # train_augmented_tests = self.augmentation_tests.iloc[train_index, :-1]
             train_target = self.cc_target[train_index]
             self.ssp, self.cr, self.sf = FeatureTestsHandler.get_feature_from_file(project_dir, self.program,
                                                                                    self.bug_id)
@@ -95,6 +95,7 @@ class FusionIdentify(BaseIdentify):
 
             train_tests,train_target,ssp,cr,sf = self.data_augmentation_with_ef(train_tests,train_target,ssp,cr,sf)
             test_index = self.passing_tests.index.get_indexer(test_index)
+
             if len(train_index) == 0:
                 for item in test_index:
                     self.cc_index.iloc[item] = True
@@ -114,8 +115,7 @@ class FusionIdentify(BaseIdentify):
                 pin_memory=True,
             )
 
-            # model = Network()
-            # model = MsWithEfCovNet()
+
             model = MSFusionNet()
             optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 
@@ -124,14 +124,21 @@ class FusionIdentify(BaseIdentify):
             loss_weights = torch.tensor([0.25, 0.75])
             if args.cuda:
                 loss_weights = loss_weights.cuda()
-            criterion = torch.nn.CrossEntropyLoss(weight=loss_weights)
-            # criterion = FocalLoss(gamma=5, weight=loss_weights)
+            criterion = FocalLoss(weight=loss_weights)
             # criterion = torch.nn.MSELoss()
+            train_start_time = time.time()
             for epoch in range(1, args.epochs):
-                self._train_ce(train_loader, model, criterion, optimizer, epoch)
+                self._train(train_loader, model, criterion, optimizer, epoch)
+            train_end_time = time.time()
+            self.train_cost += train_end_time - train_start_time
+            infer_start_time = time.time()
             self._test(model, test_index)
+            infer_end_time = time.time()
+            self.infer_cost += infer_end_time - infer_start_time
 
-    def _train_ce(self, train_loader, model, criterion, optimizer, epoch):
+
+
+    def _train(self, train_loader, model, criterion, optimizer, epoch):
         model.train()
         for batch_idx, (test, target, ssp, cr, sf) in enumerate(train_loader):
             if args.cuda:
@@ -148,50 +155,20 @@ class FusionIdentify(BaseIdentify):
                 ef = ef.repeat(2,1)
 
             prob = model(test,ef)
-            labels = torch.argmax(target, dim=1)
-            loss = criterion(prob, labels)
+
+            loss = criterion(prob, target)
 
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
-            # if epoch % 10 == 0:
-            print('Train Epoch: {} [{}/{}]\t'
-                  'loss: {}'.format(
-                epoch, batch_idx * len(target), len(train_loader.dataset),
-                loss,
-            ))
+            if epoch % 10 == 0:
+                print('Train Epoch: {} [{}/{}]\t'
+                      'loss: {}'.format(
+                    epoch, batch_idx * len(target), len(train_loader.dataset),
+                    loss,
+                ))
 
-
-    def _train_feat(self, train_loader, model, criterion, optimizer, epoch):
-        model.train()
-        for batch_idx, (test, aug_test, target) in enumerate(train_loader):
-            if args.cuda:
-                test, aug_test, target = test.cuda(), aug_test.cuda(), target.cuda()
-            test = test.to(torch.float)
-            aug_test = aug_test.to(torch.float)
-
-            if test.size(0) == 1:
-                test = test.repeat(2, 1)
-                aug_test = aug_test.repeat(2, 1)
-                target = target.repeat(2, 1)
-
-            f1 = model(test)
-            f2 = model(aug_test)
-            features = torch.cat([f1.unsqueeze(1), f2.unsqueeze(1)], dim=1)
-            target = torch.argmax(target, dim=1, keepdim=True)
-            loss = criterion(features, target)
-
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-
-            # if epoch % 10 == 0:
-            print('Train Epoch: {} [{}/{}]\t'
-                  'loss: {}'.format(
-                epoch, batch_idx * len(target), len(train_loader.dataset),
-                loss,
-            ))
 
 
     def _test(self, model, test_index):

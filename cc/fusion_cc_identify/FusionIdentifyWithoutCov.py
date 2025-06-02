@@ -7,14 +7,12 @@ from cc.fusion_cc_identify.BaseIdentify import BaseIdentify
 from cc.fusion_cc_identify.FailingTestsHandler import FailingTestsHandler
 from cc.fusion_cc_identify.FeatureTestsHandler import FeatureTestsHandler
 from cc.fusion_cc_identify.PassingTestsHandler import PassingTestsHandler
-from cc.fusion_cc_model.FusionNet import Network
 from cc.fusion_cc_model.ContraDataLoader import ContraDataLoader, TestsDataLoader
 import argparse
 
 from cc.fusion_cc_model.EFCDataLoader import CombinedInfoLoader
 from cc.fusion_cc_model.FocalLoss import FocalLoss
-from cc.fusion_cc_model.multi_scale_ori import MSResNet
-from cc.fusion_cc_model.other_models import BiLSTMNet, CnnNet, MlpNet
+from cc.fusion_cc_model.model import HandcraftedCNet
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
@@ -46,7 +44,7 @@ args = parser.parse_args()
 
 weight = 1
 
-class FusionIdentifyWithoutExpertFeature(BaseIdentify):
+class FusionIdentifyWithoutCovInfo(BaseIdentify):
     def __init__(self, project_dir, configs, args_dict, way):
         super().__init__(project_dir, configs, args_dict, way)
         self.cost = 0
@@ -63,6 +61,7 @@ class FusionIdentifyWithoutExpertFeature(BaseIdentify):
         self.failing_tests = FailingTestsHandler.get_failing_tests(new_data_df)
         self.passing_tests = PassingTestsHandler.get_passing_tests(new_data_df)
         self.train_tests = self.passing_tests[self.passing_tests.sum(axis=1) != 0]
+        # 将指定列的数据从 self.passing_tests 复制到 augmented_data中
         target = self.ground_truth_cc_index.astype("int").values
         self.cc_target = torch.FloatTensor([[0, 1]] * len(target))
         for i in range(len(target)):
@@ -70,8 +69,10 @@ class FusionIdentifyWithoutExpertFeature(BaseIdentify):
                 self.cc_target[i] = torch.FloatTensor([0, 1])
             else:
                 self.cc_target[i] = torch.FloatTensor([1, 0])
+        # size = self.passing_tests.shape[0]
         size = self.train_tests.shape[0]
         indices = np.array(self.train_tests.index)
+        # np.random.shuffle(indices)
 
         k = 5
         part_size = math.ceil(size / k)
@@ -85,6 +86,7 @@ class FusionIdentifyWithoutExpertFeature(BaseIdentify):
             train_tests = self.passing_tests.iloc[train_index, :-1]
             # train_augmented_tests = self.augmentation_tests.iloc[train_index, :-1]
             train_target = self.cc_target[train_index]
+
             self.ssp, self.cr, self.sf = FeatureTestsHandler.get_feature_from_file(project_dir, self.program,
                                                                                    self.bug_id)
             ssp = self.ssp.iloc[train_index, :]
@@ -112,20 +114,14 @@ class FusionIdentifyWithoutExpertFeature(BaseIdentify):
                 pin_memory=True,
             )
 
-            model = MSResNet()
-            elements_length = len(self.CCE[-1]) - 1
-            # model = CnnNet(elements_length)
-            # model = MlpNet(elements_length)
+            model = HandcraftedCNet()
             optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
-
             if args.cuda:
                 model.cuda()
             loss_weights = torch.tensor([0.25, 0.75])
             if args.cuda:
                 loss_weights = loss_weights.cuda()
-            # criterion = torch.nn.CrossEntropyLoss(weight=loss_weights)
-            criterion = FocalLoss(weight=loss_weights)
-
+            criterion = torch.nn.CrossEntropyLoss(weight=loss_weights)
             for epoch in range(1, args.epochs):
                 self._train_ce(train_loader, model, criterion, optimizer, epoch)
             self._test(model, test_index)
@@ -146,8 +142,7 @@ class FusionIdentifyWithoutExpertFeature(BaseIdentify):
                 target = target.repeat(2, 1)
                 ef = ef.repeat(2,1)
 
-            prob = model(test)
-
+            prob = model(ef)
             loss = criterion(prob, target)
 
             optimizer.zero_grad()
@@ -215,7 +210,7 @@ class FusionIdentifyWithoutExpertFeature(BaseIdentify):
                 sf = torch.unsqueeze(sf.to(torch.float), dim=0)
 
                 ef = torch.hstack((ssp, cr, sf))
-                prob = model(test)
-                prob = torch.softmax(prob, dim=1)
+
+                prob = model(ef)
                 if prob[0][0] < prob[0][1]:
                     self.cc_index.iloc[item] = True

@@ -1,12 +1,8 @@
 import math
-
 import numpy as np
 import pandas as pd
-
-from cc.triplet_cc_identify.FailingTestsHandler import FailingTestsHandler
-# from cc.triplet_cc_identify.PassingTestsHandler import PassingTestsHandler
-from fl_evaluation.metrics.calc_corr import calc_corr
 from CONFIG import *
+from cc.fusion_cc_identify.FailingTestsHandler import FailingTestsHandler
 from fl_evaluation.metrics.metrics2 import *
 from fl_evaluation.metrics.new_calc_corr import new_calc_corr
 from read_data.Defects4JDataLoader import Defects4JDataLoader
