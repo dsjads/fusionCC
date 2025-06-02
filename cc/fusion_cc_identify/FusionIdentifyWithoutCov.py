@@ -121,7 +121,8 @@ class FusionIdentifyWithoutCovInfo(BaseIdentify):
             loss_weights = torch.tensor([0.25, 0.75])
             if args.cuda:
                 loss_weights = loss_weights.cuda()
-            criterion = torch.nn.CrossEntropyLoss(weight=loss_weights)
+            criterion = FocalLoss(gamma=5, weight=loss_weights)
+            # criterion = torch.nn.CrossEntropyLoss(weight=loss_weights)
             for epoch in range(1, args.epochs):
                 self._train_ce(train_loader, model, criterion, optimizer, epoch)
             self._test(model, test_index)
@@ -173,7 +174,7 @@ class FusionIdentifyWithoutCovInfo(BaseIdentify):
             f1 = model(test)
             f2 = model(aug_test)
             features = torch.cat([f1.unsqueeze(1), f2.unsqueeze(1)], dim=1)
-            target = torch.argmax(target, dim=1, keepdim=True)
+            # target = torch.argmax(target, dim=1, keepdim=True)
             loss = criterion(features, target)
 
             optimizer.zero_grad()

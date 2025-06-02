@@ -120,7 +120,7 @@ class FusionIdentifyWithoutExpertFeature(BaseIdentify):
             loss_weights = torch.tensor([0.25, 0.75])
             if args.cuda:
                 loss_weights = loss_weights.cuda()
-            criterion = FocalLoss(weight=loss_weights)
+            criterion = FocalLoss(gamma=5,weight=loss_weights)
 
             for epoch in range(1, args.epochs):
                 self._train_ce(train_loader, model, criterion, optimizer, epoch)
