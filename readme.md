@@ -31,10 +31,10 @@ The output can be found under folder `./results/`
 
 #### RQ3
 - Run the script: `./cc/fusion_cc_identify/run_fusion.py`
-The output can be found under folder `./results/the_appraoch-trim` and `./results/the_appraoch-relabel`
+The output can be found under folder `./results/the_approach-trim` and `./results/the_appraoch-relabel`
 
 #### RQ4
-The output can be found under folder `./results/the_appraoch/time.txt`
+The output can be found under folder `./results/the_approach/time.txt`
 
 Eample output:
 
