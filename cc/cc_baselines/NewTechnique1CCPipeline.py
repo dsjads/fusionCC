@@ -99,7 +99,8 @@ def main():
         "Lang",
         "Math",
         "Mockito",
-        "Time"
+        "Time",
+        "Closure"
     ]
     run(program_list, "Chart", 1, NewTechnique1CCPipeline, "2024-5-8-Tech-I", 1)
 
@@ -108,20 +109,24 @@ def main():
 if __name__ == "__main__":
     # main()
     # task_complete("Tech-I end")
-    program_list = [------------
-        "Chart",
-        # "Closure-2023-12-6-1",
-        "Lang",
-        "Math",
-        "Mockito",
-        "Time"
-    ]
+    # program_list = [
+    #     "Chart",
+    #     # "Closure-2023-12-6-1",
+    #     "Lang",
+    #     "Math",
+    #     "Mockito",
+    #     "Time",
+    #     "Closure"
+    # ]
+    # program_list = ["gzip","libtiff","python","space"]
+    program_list = ["space"]
     for program in program_list:
         for i in cc_info[program]:
-            configs = {'-d': 'd4j', '-p': program, '-i': i, '-m': method_para, '-e': 'origin'}
+            configs = {'-d': 'manybugs', '-p': program, '-i': i, '-m': method_para, '-e': 'origin'}
             sys.argv = os.path.basename(__file__)
-            ccpl = NewTechnique1CCPipeline(project_dir, configs, 1, "2024-5-15-New-Tech-I")
+            ccpl = NewTechnique1CCPipeline(project_dir, configs, 1, "2025-New-Tech-I-C")
             ccpl.find_cc_index()
             ccpl.evaluation()
+            ccpl.calRes("relabel")
             ccpl.calRes("trim")
     # a = 1

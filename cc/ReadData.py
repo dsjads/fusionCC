@@ -25,8 +25,8 @@ class ReadData:
         return self.data_obj.data_df
 
     def _dynamic_choose(self, loader):
+        self.dataset_dir = os.path.join(self.project_dir, "..", "MANYBUGS_DATA")
         # self.dataset_dir = os.path.join(self.project_dir, "..", "data")
-        self.dataset_dir = os.path.join(self.project_dir, "data")
         data_obj = loader(self.dataset_dir, self.program, self.bug_id)
         data_obj.load()
         return data_obj

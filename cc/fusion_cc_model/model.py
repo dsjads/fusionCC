@@ -1,5 +1,4 @@
 import math
-
 from torch import nn
 import torch
 from torch.nn import functional as F
@@ -38,29 +37,60 @@ class MSFusionNet(nn.Module):
         self.relu = nn.ReLU()
         self.layer3 = BasicBlock(1, 64, 3)
         self.layer5 = BasicBlock(1, 64, 5)
-        self.layer7 = BasicBlock(1, 64, 9)
+        self.layer9 = BasicBlock(1, 64, 9)
+        # self.conv = nn.Conv1d(3 * 64, 64, 9, padding=4)
         self.conv = nn.Conv1d(3 * 64, 64, 9, padding=4)
         self.pool1 = nn.MaxPool1d(2, 2)
         self.pool2 = nn.AdaptiveMaxPool1d(1)
         self.handcraftedNet = HandcraftedNet(30)
         self.fusion = ScalarWeightFusion()
-        self.fc = nn.Linear(64, 2)
-    def forward(self, x0 , ef):
+        self.fc = nn.Linear(64*2, 2)
+        self.bn = nn.BatchNorm1d(64*2)
+    def forward(self, x):
+        ef = x[:, -30:]  # 提取后30维作为手工特征ef
+        x0 = x[:, :-30]  # 提取前面的部分作为深度特征x0
         x0 = x0.unsqueeze(1)
         x = self.layer3(x0)
         y = self.layer5(x0)
-        z = self.layer7(x0)
+        z = self.layer9(x0)
         out = torch.cat([x, y, z], dim=1)
+        out = torch.nn.functional.pad(out, (0, max(0, 2 - out.size(2))))
         out = self.pool1(out)
         out = self.conv(out)
         out = self.pool2(out)
         out = torch.flatten(out, 1)
         ef = self.handcraftedNet(ef)
-        feats = [out,ef]
-        x = self.fusion(feats)
+        # feats = [out,ef]
+        x = torch.hstack((out , ef))
+        x = self.bn(x)
+        # x = self.fusion(feats)
         x = self.fc(x)
         return x
 
+class MSCnnNet(nn.Module):
+    def __init__(self):
+        super(MSCnnNet, self).__init__()
+        self.relu = nn.ReLU()
+        self.layer3 = BasicBlock(1, 64, 3)
+        self.layer5 = BasicBlock(1, 64, 5)
+        # self.layer9 = BasicBlock(1, 64, 9)
+        self.pool1 = nn.MaxPool1d(2, 2)
+        self.pool2 = nn.AdaptiveMaxPool1d(1)
+        self.fc = nn.Linear(64, 2)
+        self.conv = nn.Conv1d(2 * 64, 64, 9, padding=4)
+    def forward(self, x0):
+        x0 = x0.unsqueeze(1)
+        x = self.layer3(x0)
+        y = self.layer5(x0)
+        # z = self.layer9(x0)
+        out = torch.cat([x, y], dim=1)
+        out = torch.nn.functional.pad(out, (0, max(0, 2 - out.size(2))))
+        out = self.pool1(out)
+        out = self.conv(out)
+        out = self.pool2(out)
+        out = torch.flatten(out, 1)
+        x = self.fc(out)
+        return x
 
 class Cnn(nn.Module):
     def __init__(self):
@@ -101,8 +131,9 @@ class ScalarWeightFusion(nn.Module):
         self.weights = nn.Parameter(torch.ones(num_branches))
         self.softmax = nn.Softmax(dim=0)
     def forward(self, feats):
-        weights = self.softmax(self.weights)
-        fused = sum(w*f for w, f in zip(weights,feats))
+        # weights = self.softmax(self.weights)
+        # fused = sum(w*f for w, f in zip(weights,feats))
+        fused = sum(feats) / len(feats)
         return fused
 
 

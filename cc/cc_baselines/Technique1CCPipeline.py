@@ -108,14 +108,15 @@ class Technique1CCPipeline(BaseCCPipeline):
 
 
 def main():
-    program_list = [
-        "Chart",
-        "Lang",
-        "Math",
-        "Mockito",
-        "Time"
-    ]
-    run(program_list, "Chart", 1, Technique1CCPipeline, "2024-Tech-I", 1)
+    # program_list = [
+    #     "Chart",
+    #     "Lang",
+    #     "Math",
+    #     "Mockito",
+    #     "Time.csv"
+    # ]
+    program_list = ["gzip","libtiff","python","space"]
+    run(program_list, "gzip", 2, Technique1CCPipeline, "2024-Tech-I-C", 0.58)
 
 
 

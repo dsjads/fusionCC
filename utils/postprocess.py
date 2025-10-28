@@ -80,4 +80,4 @@ def survey_parse():
         all_data_recall_trim.to_excel(writer, sheet_name="default")
 
 
-    # parse(os.path.join(project_dir, "new_results", "survey"), "origin_record.txt", "precision_recall.xlsx")
+    # parse(os.path.join(project_dir, "new_results", "survey"), "origin_record.txt.txt", "precision_recall.xlsx")

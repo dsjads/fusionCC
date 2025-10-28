@@ -110,7 +110,7 @@ def main():
         "Lang",
         "Math",
         "Mockito",
-        "Time"
+        "Time.csv"
     ]
     method_para = ""
     for method in method_list[:-1]:

@@ -2,6 +2,7 @@ import sys
 import time
 
 from CONFIG import *
+from cc.fusion_cc_identify.BaseIdentify import BaseIdentify
 from utils.postprocess import parse
 from utils.write_util import write_rank_to_txt
 
@@ -14,21 +15,27 @@ def run(program_list, start_program, start_program_id, identifyMethod, way, n):
             if program == start_program and i == start_program_id:
                 flag = True
             if flag:
-                configs = {'-d': 'd4j', '-p': program, '-i': i, '-m': method_para, '-e': 'origin'}
+                configs = {'-d': 'manybugs', '-p':program, '-i':i, '-m':method_para, '-e':'origin'}
+                # configs = {'-d': 'd4j', '-p': program, '-i': i, '-m': method_para, '-e': 'origin'}
                 # configs = {'-d': 'd4j', '-p': "Closure-2023-12-6-1", '-i': 36, '-m': method_para, '-e': 'origin'}
                 sys.argv = os.path.basename(__file__)
-                pl = identifyMethod(project_dir, configs, n, way)
-                pl.find_cc_index()
+                pl = BaseIdentify(project_dir, configs, n, way)
+                # count += pl.get_failing_tests()
+                # start = time.time()
+                # pl.find_cc_index()
+                # end = time.time()
                 time_ = dict()
+                num = pl.get_failing_tests()
                 # time_["train_cost"] = pl.train_cost
-                # time_["infer_cost"] = pl.infer_cost
+                # time_["test_cost"] = pl.infer_cost
+                time_["time"] = num
                 save_path = os.path.join(project_dir, "results", way, "time.txt")
                 write_rank_to_txt(time_, save_path, program, i)
                 pl.evaluation()
                 pl.calRes("trim")
                 pl.calRes("relabel")
 
-    # parse(os.path.join(project_dir, "new_results", way), "origin_record.txt", "precision_recall.xlsx")
+    # parse(os.path.join(project_dir, "new_results", way), "origin_record.txt.txt", "precision_recall.xlsx")
     for operation in ["trim", "relabel"]:
         op_way = way+"-"+operation
-        parse(os.path.join(project_dir, "new_results", op_way), op_way+"_MFR.txt", "FL-1.xlsx")
+        parse(os.path.join(project_dir, "results", op_way), op_way+"_MFR.txt", "FL-1.xlsx")

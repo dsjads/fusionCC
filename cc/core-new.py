@@ -56,7 +56,7 @@ def run(program_list, start_program, start_program_id, identifyMethod, way, arg_
                         max_pl = pl
                 if max_original_record is None or max_record is None or max_config is None:
                     continue
-                original_record_path = os.path.join(project_dir, "new_results", way, "origin_record.txt")
+                original_record_path = os.path.join(project_dir, "new_results", way, "origin_record.txt.txt")
                 record_path = os.path.join(project_dir, "new_results", way, "record.txt")
                 write_rank_to_txt(max_original_record, original_record_path, program, i)
                 write_rank_to_txt(max_record, record_path, program, i)
@@ -67,7 +67,7 @@ def run(program_list, start_program, start_program_id, identifyMethod, way, arg_
                 # pl.evaluation()
                 max_pl.calRes("trim")
     parse(os.path.join(project_dir, "new_results", way), way+"_MFR.txt", "FL-1.xlsx")
-    parse(os.path.join(project_dir, "new_results", way), "origin_record.txt", "precision_recall.xlsx")
+    parse(os.path.join(project_dir, "new_results", way), "origin_record.txt.txt", "precision_recall.xlsx")
 
 
 from multiprocessing import Process

@@ -9,7 +9,7 @@ def main():
         "Lang",
         "Math",
         "Mockito",
-        "Time"
+        "Time.csv"
     ]
     name = "2023-6-12-step-1"
     run(program_list, "Chart", 1, FeatureIdentification, name, 0.9)

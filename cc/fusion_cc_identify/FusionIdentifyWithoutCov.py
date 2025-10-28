@@ -150,12 +150,12 @@ class FusionIdentifyWithoutCovInfo(BaseIdentify):
             loss.backward()
             optimizer.step()
 
-            # if epoch % 10 == 0:
-            print('Train Epoch: {} [{}/{}]\t'
-                  'loss: {}'.format(
-                epoch, batch_idx * len(target), len(train_loader.dataset),
-                loss,
-            ))
+            if epoch % 30 == 0:
+                print('Train Epoch: {} [{}/{}]\t'
+                      'loss: {}'.format(
+                    epoch, batch_idx * len(target), len(train_loader.dataset),
+                    loss,
+                ))
 
 
     def _train_feat(self, train_loader, model, criterion, optimizer, epoch):

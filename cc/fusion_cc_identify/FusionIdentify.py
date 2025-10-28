@@ -1,6 +1,7 @@
 import time
 import math
 import numpy as np
+# import shap
 import torch
 from torch import optim
 from CONFIG import *
@@ -13,7 +14,7 @@ import argparse
 
 from cc.fusion_cc_model.EFCDataLoader import CombinedInfoLoader
 from cc.fusion_cc_model.FocalLoss import FocalLoss
-from cc.fusion_cc_model.model import MSFusionNet
+from cc.fusion_cc_model.model import MSFusionNet, MSCnnNet
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
@@ -54,7 +55,7 @@ class FusionIdentify(BaseIdentify):
 
     def _find_cc_index(self):
         self._find_CCE()
-        if len(self.CCE) == 0:
+        if len(self.CCE[-1]) == 0:
             self.train_flag = False
             return
         CCE = self.CCE[-1]
@@ -64,6 +65,7 @@ class FusionIdentify(BaseIdentify):
         self.failing_tests = FailingTestsHandler.get_failing_tests(new_data_df)
         self.passing_tests = PassingTestsHandler.get_passing_tests(new_data_df)
         self.train_tests = self.passing_tests[self.passing_tests.sum(axis=1) != 0]
+
         # 将指定列的数据从 self.passing_tests 复制到 augmented_data中
         target = self.ground_truth_cc_index.astype("int").values
         self.cc_target = torch.FloatTensor([[0, 1]] * len(target))
@@ -75,10 +77,11 @@ class FusionIdentify(BaseIdentify):
         size = self.train_tests.shape[0]
         indices = np.array(self.train_tests.index)
         # np.random.shuffle(indices)
-
-        k = 5
+        self.ssp, self.cr, self.sf = FeatureTestsHandler.get_feature_from_file(project_dir, self.program,
+                                                                               self.bug_id)
+        k = 2
         part_size = math.ceil(size / k)
-
+        # coverage_shap, handcrafted_shap = 0, 0
         for i in range(k):
             start = i * part_size
             end = (i + 1) * part_size if i < k - 1 else size
@@ -87,8 +90,7 @@ class FusionIdentify(BaseIdentify):
             train_index = self.passing_tests.index.get_indexer(train_index)
             train_tests = self.passing_tests.iloc[train_index, :-1]
             train_target = self.cc_target[train_index]
-            self.ssp, self.cr, self.sf = FeatureTestsHandler.get_feature_from_file(project_dir, self.program,
-                                                                                   self.bug_id)
+
             ssp = self.ssp.iloc[train_index, :]
             cr = self.cr.iloc[train_index, :]
             sf = self.sf.iloc[train_index, :]
@@ -114,11 +116,8 @@ class FusionIdentify(BaseIdentify):
                 num_workers=0,
                 pin_memory=True,
             )
-
-
             model = MSFusionNet()
             optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
-
             if args.cuda:
                 model.cuda()
             loss_weights = torch.tensor([0.25, 0.75])
@@ -133,8 +132,27 @@ class FusionIdentify(BaseIdentify):
             self.train_cost += train_end_time - train_start_time
             infer_start_time = time.time()
             self._test(model, test_index)
+            # temp_coverage_shap, temp_hand_shap = self._shap(model, test_index)
+            # coverage_shap += temp_coverage_shap
+            # handcrafted_shap += temp_hand_shap
             infer_end_time = time.time()
             self.infer_cost += infer_end_time - infer_start_time
+        # coverage_shap /= k
+        # handcrafted_shap /= k
+        # program_bug_id = f"{self.program}-{self.bug_id}"
+        # # 2. 格式化SHAP值（保留4位小数，确保数值可读性）
+        # coverage_str = f"{coverage_shap:.4f}"
+        # handcrafted_str = f"{handcrafted_shap:.4f}"
+        #
+        # # 3. 组合一行数据（用空格分隔各字段）
+        # line = f"{program_bug_id} {coverage_str} {handcrafted_str}\n"
+        #
+        # # 4. 写入文件（使用追加模式，避免覆盖已有内容）
+        # with open("../../results/shap_results.txt", "a", encoding="utf-8") as f:
+        #     f.write(line)
+        #
+        # # 可选：打印提示信息
+        # print(f"已保存结果到shap.results.txt：{line.strip()}")
 
 
 
@@ -148,28 +166,27 @@ class FusionIdentify(BaseIdentify):
             cr = cr.to(torch.float)
             sf = sf.to(torch.float)
             ef = torch.hstack((ssp, cr, sf))
-            # aug_test = aug_test.to(torch.float)
             if test.size(0) == 1:
                 test = test.repeat(2, 1)
                 target = target.repeat(2, 1)
                 ef = ef.repeat(2,1)
 
-            prob = model(test,ef)
-
+            # prob = model(test,ef)
+            x = torch.hstack((test, ef))
+            # prob = model(test, ef)
+            prob = model(x)
             loss = criterion(prob, target)
 
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
-            if epoch % 10 == 0:
+            if epoch % 30 == 0:
                 print('Train Epoch: {} [{}/{}]\t'
                       'loss: {}'.format(
                     epoch, batch_idx * len(target), len(train_loader.dataset),
                     loss,
                 ))
-
-
 
     def _test(self, model, test_index):
         model.eval()
@@ -194,6 +211,53 @@ class FusionIdentify(BaseIdentify):
 
                 ef = torch.hstack((ssp, cr, sf))
 
-                prob = model(test, ef)
+                x = torch.hstack((test,ef))
+                # prob = model(test, ef)
+                prob = model(x)
                 if prob[0][0] < prob[0][1]:
                     self.cc_index.iloc[item] = True
+
+    # def _shap(self, model, test_index):
+    #     test = self.passing_tests.iloc[test_index, :-1]
+    #     ssp = self.ssp.iloc[test_index]
+    #     cr = self.cr.iloc[test_index]
+    #     sf = self.sf.iloc[test_index]
+    #
+    #     test = torch.tensor(test.values)
+    #     ssp = torch.tensor(ssp.values)
+    #     cr = torch.tensor(cr.values)
+    #     sf = torch.tensor(sf.values)
+    #     if args.cuda:
+    #         test, ssp, cr, sf = test.cuda(), ssp.cuda(), cr.cuda(), sf.cuda()
+    #     test = test.to(torch.float)
+    #     ssp = ssp.to(torch.float)
+    #     cr = cr.to(torch.float)
+    #     sf = sf.to(torch.float)
+    #     hf = torch.hstack([ssp, cr, sf])
+    #     X_combined = torch.hstack([test, hf])
+    #     n_background = min(X_combined.shape[0], 50)
+    #     background_indices = np.random.choice(X_combined.shape[0], n_background, replace=False)
+    #     background = X_combined[background_indices]  # 背景数据是张量
+    #     explainer = shap.GradientExplainer(model, background)
+    #
+    #     sample_size = min(100, X_combined.shape[0])
+    #     sample_indices = np.random.choice(X_combined.shape[0], sample_size, replace=False)
+    #     X_sample = X_combined[sample_indices]
+    #
+    #     shap_values = explainer.shap_values(X_sample)  # 输出：(n_samples, n_features,2)，对应两个类别\
+    #     n_test = test.shape[1]
+    #
+    #     depth_shap = np.mean(np.abs(np.sum(shap_values[:,:n_test,0], axis= 1)))
+    #
+    #     handcraft_shap = np.mean(np.abs(np.sum(shap_values[:,n_test:,0], axis= 1)))
+    #
+    #     # # 7. 输出重要性结果
+    #     # print(f"深度提取特征组平均SHAP值：{depth_shap:.4f}")
+    #     # print(f"手工特征组平均SHAP值：{handcraft_shap:.4f}")
+    #     # if depth_shap > handcraft_shap:
+    #     #     print("结论：深度提取特征对模型决策的影响更大")
+    #     # else:
+    #     #     print("结论：手工特征对模型决策的影响更大")
+    #     return depth_shap, handcraft_shap
+
+

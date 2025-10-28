@@ -72,7 +72,7 @@ def main():
         "Lang",
         "Math",
         "Mockito",
-        "Time"
+        "Time.csv"
     ]
     run(program_list, "Chart", 1, Tech12010Identification, "2022-7-30-Feature", 1)
 

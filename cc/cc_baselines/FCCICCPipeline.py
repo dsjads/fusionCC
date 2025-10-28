@@ -109,7 +109,7 @@ class FCCIIdentify(BaseCCPipeline):
         return ssp_standard, cr_standard, sf_standard
 
 if __name__ == "__main__":
-    program_list=["Chart", "Lang", "Math", "Mockito", "Time"]
+    program_list=["Chart", "Lang", "Math", "Mockito", "Time.csv"]
     for program in program_list:
         configs = {'-d': 'd4j', '-p': program, '-i': '1', '-m': method_para, '-e': 'origin'}
         sys.argv = os.path.basename(__file__)

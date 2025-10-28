@@ -1,8 +1,11 @@
 import multiprocessing
+from collections import Counter
 
 import numpy as np
 import pandas as pd
 import torch
+from imblearn.over_sampling import RandomOverSampler, SMOTE
+from imblearn.under_sampling import RandomUnderSampler
 
 from cc.cc_baselines.BaseCCPipeline import BaseCCPipeline
 from cc.fusion_cc_identify.FailingTestsHandler import FailingTestsHandler
@@ -116,6 +119,10 @@ class BaseIdentify(BaseCCPipeline):
                         CCE.append(i)
             self.CCE.append(CCE)
 
+    def get_failing_tests(self):
+        self.failing_tests = FailingTestsHandler.get_failing_tests(self.data_df)
+        return len(self.failing_tests)
+
     def data_augmentation(self, train_tests, train_target):
         # resampling
         indices = (train_target == torch.tensor([0, 1], dtype=torch.float32)).all(dim=1)
@@ -136,7 +143,6 @@ class BaseIdentify(BaseCCPipeline):
         sub_train_target = train_target[indices]
         sub_ssp, sub_cr, sub_sf = ssp[index_np], cr[index_np], sf[index_np]
         sub_train_tests = train_tests[index_np]
-
         # 存储待拼接的数据
         train_tests_list = [train_tests]
         train_target_list = [train_target]
@@ -161,3 +167,39 @@ class BaseIdentify(BaseCCPipeline):
         cr = pd.concat(cr_list, ignore_index=True)
         sf = pd.concat(sf_list, ignore_index=True)
         return train_tests, train_target, ssp, cr, sf
+
+    def data_augmentation_under_imblearn(self, train_tests, train_target, ssp, cr, sf, imbalance_method='smote'):
+        train_labels = np.argmax(train_target, axis=1)
+        unique_classes = np.unique(train_labels)
+        if len(unique_classes) < 2:
+            print(f"警告: 训练数据中只有一个类别 ({unique_classes[0]})，跳过重采样")
+            return train_tests, train_target, ssp, cr, sf
+
+        if imbalance_method == 'undersample':
+            # 随机欠采样
+            sampler = RandomUnderSampler(random_state=42)
+        elif imbalance_method == 'oversample':
+            # 随机过采样
+            sampler = RandomOverSampler(random_state=42)
+        else:  # 默认使用SMOTE
+            # SMOTE过采样
+            # 统计类别分布，找到少数类样本数
+            class_counts = Counter(train_labels.numpy())
+            minority_count = min(class_counts.values())  # 少数类样本数量
+            # 计算安全的k_neighbors（需小于少数类样本数，且不超过5）
+            if minority_count <= 1:
+                # 少数类样本太少，SMOTE效果有限，强制设置最小邻居数
+                sampler = RandomOverSampler(random_state=42)
+            else:
+                k_neighbors = min(5, minority_count - 1)  # 确保邻居数小于少数类样本数
+                sampler = SMOTE(random_state=42, k_neighbors=k_neighbors)
+        n_cols_train = train_tests.shape[1]
+        all_features = np.hstack([train_tests, ssp, cr, sf])
+        train_target = np.argmax(train_target, axis=1)
+        all_features_resampled, train_target_resampled = sampler.fit_resample(all_features, train_target)
+        train_tests_resampled = all_features_resampled[:, :n_cols_train]
+        ssp_resampled = all_features_resampled[:, n_cols_train:n_cols_train + 10]
+        cr_resampled = all_features_resampled[:, n_cols_train + 10:n_cols_train + 2 * 10]
+        sf_resampled = all_features_resampled[:, n_cols_train + 2 * 10:n_cols_train + 3 * 10]
+        train_target_resampled = np.eye(2)[train_target_resampled]
+        return train_tests_resampled, train_target_resampled, ssp_resampled, cr_resampled, sf_resampled

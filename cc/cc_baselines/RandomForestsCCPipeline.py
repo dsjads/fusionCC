@@ -73,15 +73,16 @@ class RandomForestsCCPipeline(BaseCCPipeline):
 
 
 def main():
-    program_list = [
-        "Chart",
-        # # "Closure-2023-12-6-1",
-        "Lang",
-        "Math",
-        "Mockito",
-        "Time"
-    ]
-    run(program_list, "Chart", 1, RandomForestsCCPipeline, "2024-5-15-RF", 5)
+    # program_list = [
+    #     "Chart",
+    #     # # "Closure-2023-12-6-1",
+    #     "Lang",
+    #     "Math",
+    #     "Mockito",
+    #     "Time"
+    # ]
+    program_list = ["gzip","libtiff","python","space"]
+    run(program_list, "gzip", 2, RandomForestsCCPipeline, "2024-5-15-RF-C", 5)
 
 
 

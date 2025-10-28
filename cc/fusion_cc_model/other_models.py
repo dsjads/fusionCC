@@ -47,7 +47,7 @@ def reshape_data(data, k):
 class CnnNet(nn.Module):
     def __init__(self, input_dim):
         super(CnnNet, self).__init__()
-        self.conv1 = nn.Conv1d(1, 3*64, kernel_size=9, stride=1, padding=4)
+        self.conv1 = nn.Conv1d(1, 3*64, kernel_size=11, stride=1, padding=5)
         self.maxpool1 = nn.MaxPool1d(kernel_size=2, stride=2)
         self.conv2 = nn.Conv1d(3*64, 64, kernel_size=9, stride=1, padding=4)
         self.maxpool2 = nn.AdaptiveMaxPool1d(1)

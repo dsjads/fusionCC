@@ -131,14 +131,15 @@ def u(p_e):
 #             svmccpl.calRes()
 
 def main():
-    program_list = [
-        "Chart",
-        "Lang",
-        "Math",
-        "Mockito",
-        "Time"
-    ]
-    run(program_list, "Chart", 1, Technique2CCPipeline, "2024-5-15-Tech-II", 1)
+    # program_list = [
+    #     "Chart",
+    #     "Lang",
+    #     "Math",
+    #     "Mockito",
+    #     "Time"
+    # ]
+    program_list = ["gzip","libtiff","python","space"]
+    run(program_list, "space", 10, Technique2CCPipeline, "2024-5-15-Tech-II-C", 1)
 
 if __name__ == "__main__":
     main()

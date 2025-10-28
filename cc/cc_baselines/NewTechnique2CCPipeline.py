@@ -157,7 +157,7 @@ def main():
         # "Lang",
         # "Math",
         # "Mockito",
-        # "Time"
+        # "Time.csv"
     ]
     run(program_list, "Chart", 1, NewTechnique2CCPipeline, "2022-9-27-Tech-II", 1)
 
@@ -172,7 +172,7 @@ if __name__ == "__main__":
         "Lang",
         "Math",
         "Mockito",
-        "Time"
+        "Time.csv"
     ]
     for program in program_list:
         for i in cc_info[program]:

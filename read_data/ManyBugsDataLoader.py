@@ -13,9 +13,9 @@ class ManyBugsDataLoader(DataLoader):
 
     def load(self):
         self.file_dir = os.path.join(self.base_dir,
-                                     "manybugs",
+                                     # "manybugs",
                                      self.program,
-                                     # str(self.bug_id)
+                                     str(self.bug_id)
                                      )
         self._load_columns()
         self._load_features()
@@ -23,11 +23,13 @@ class ManyBugsDataLoader(DataLoader):
         self._load_fault_line()
 
     def _load_features(self):
-
         feature_path = os.path.join(self.file_dir, 'covMatrix.txt')
         feature_data = process_coding(feature_path)
         feature_data = self._process_feature_data(feature_data)
-        self.feature_df = pd.DataFrame(feature_data, columns=self.concrete_columns[:])
+        if self.program == 'space':
+            self.feature_df = pd.DataFrame(feature_data, columns=self.concrete_columns[:-1])
+        else:
+            self.feature_df = pd.DataFrame(feature_data, columns=self.concrete_columns[:])
 
         self._load_labels()
 
@@ -40,6 +42,7 @@ class ManyBugsDataLoader(DataLoader):
     def _load_columns(self):
         columns_path = os.path.join(self.file_dir, 'componentinfo.txt')
         self.concrete_columns = self._process_content(columns_path)
+        self.concrete_columns = [int(s) for s in self.concrete_columns]
 
     def _load_fault_line(self):
         fault_line_data = process_coding(os.path.join(self.file_dir, "faultLine.txt"))
@@ -76,15 +79,16 @@ class ManyBugsDataLoader(DataLoader):
 
         feature_data = [feature_str.strip().split() for feature_str in feature_data]
         feature_data = [list(map(float, arr)) for arr in feature_data]
-        # feature_data = [[0 if a == 0 else 1 for a in elem] for elem in feature_data]
+        feature_data = [[0 if a == 0 else 1 for a in elem] for elem in feature_data]
 
         return feature_data
 
 
 if __name__ == "__main__":
-    base_dir = "D:\\Study\\master\\2020-2021-2\\1-VAE_GAN\\CCCode\\data"
-    program = "motivation"
-    bug_id = ""
+    base_dir = '/tmp/MANYBUGS_DATA/'
+    # base_dir = "D:\\Study\\master\\2020-2021-2\\1-VAE_GAN\\CCCode\\data"
+    program = "space"
+    bug_id = "v3"
     data = ManyBugsDataLoader(base_dir, program, bug_id)
     data.load()
     a= 1
